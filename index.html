@@ -736,7 +736,8 @@ async function submitReport() {
 
   showLoading('送出通報中...');
 
-  const reportId = 'MIY-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
+  const reportId = 'MIY-' + new Date().getFullYear() + '-' + 
+                   String(Math.floor(Math.random()*9000)+1000);
 
   const payload = {
     reportId,
@@ -754,15 +755,15 @@ async function submitReport() {
   };
 
   try {
-    if (CONFIG.GAS_URL && CONFIG.GAS_URL !== 'YOUR_GAS_WEBHOOK_URL') {
-      await fetch(CONFIG.GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    }
-  } catch(e) {
-    console.log('GAS error:', e);
+    // 用 no-cors 模式送出，避免 CORS 問題
+    await fetch(CONFIG.GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(err) {
+    Logger.log('fetch error: ' + err);
   }
 
   hideLoading();
@@ -772,7 +773,6 @@ async function submitReport() {
   document.querySelector('.step-indicator').style.display = 'none';
   window.scrollTo(0, 0);
 }
-
 function closeLiff() {
   try { liff.closeWindow(); } catch(e) { window.close(); }
 }
