@@ -646,47 +646,67 @@ function resetGpsBtn() {
   btn.disabled = false;
 }
 
-// GPS 定位成功後 → 直接用 Google Maps 查附近門牌
-// 說明：NLSC TownVillagePointQuery 只能查村里歸屬，無法查附近門牌
-//       改用 Google Geocoding API 做逆地址查詢，可以找到巷弄門號
+// GPS 定位成功後 → 呼叫 GAS 查「門牌資料」工作表
 async function queryNLSC(lng, lat) {
   resetGpsBtn();
-  await queryGoogleMaps(lng, lat);
+  await queryNearbyFromGAS(lat, lng);
 }
 
-// Google Maps Geocoding API 逆地址查詢
+// 呼叫 GAS action=nearby，用 JSONP 避免 CORS
+function queryNearbyFromGAS(lat, lng) {
+  return new Promise((resolve) => {
+    const cb   = 'nearby_' + Date.now();
+    const s    = document.createElement('script');
+    const url  = CONFIG.GAS_URL
+               + '?action=nearby'
+               + '&lat=' + lat
+               + '&lng=' + lng
+               + '&radius=15'
+               + '&callback=' + cb;
+
+    let done = false;
+
+    window[cb] = function(data) {
+      done = true;
+      delete window[cb];
+      document.body.removeChild(s);
+
+      if (data.addresses && data.addresses.length > 0) {
+        showAddrList(data.addresses, 'GPS');
+      } else {
+        // 15 公尺內無門牌 → 顯示 GPS 點區塊
+        showAddrFallback(lat, lng);
+      }
+      resolve();
+    };
+
+    s.onerror = function() {
+      done = true;
+      delete window[cb];
+      if (document.body.contains(s)) document.body.removeChild(s);
+      showAddrFallback(lat, lng);
+      resolve();
+    };
+
+    // 10 秒超時
+    setTimeout(() => {
+      if (!done) {
+        done = true;
+        delete window[cb];
+        if (document.body.contains(s)) document.body.removeChild(s);
+        showAddrFallback(lat, lng);
+        resolve();
+      }
+    }, 10000);
+
+    s.src = url;
+    document.body.appendChild(s);
+  });
+}
+
+// Google Maps API 已不再作為主要查詢（保留備用）
 async function queryGoogleMaps(lng, lat) {
-  if (!CONFIG.GMAPS_KEY || CONFIG.GMAPS_KEY === 'YOUR_GOOGLE_MAPS_API_KEY') {
-    showAddrFallback(lat, lng);
-    return;
-  }
-  try {
-    const url  = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=zh-TW&result_type=street_address|premise&key=${CONFIG.GMAPS_KEY}`;
-    const res  = await fetch(url);
-    const data = await res.json();
-
-    if (data.status === 'REQUEST_DENIED') {
-      console.log('Google API error:', data.error_message);
-      showAddrFallback(lat, lng);
-      return;
-    }
-
-    if (data.results && data.results.length > 0) {
-      // 過濾出有門牌號碼的結果（包含巷弄）
-      const withNum = data.results.filter(r =>
-        /[0-9]+號/.test(r.formatted_address)
-      );
-      const toShow = (withNum.length > 0 ? withNum : data.results)
-        .slice(0, 5)
-        .map(r => ({ address: r.formatted_address }));
-      showAddrList(toShow, 'GPS');
-    } else {
-      showAddrFallback(lat, lng);
-    }
-  } catch(e) {
-    console.log('Google Maps error:', e);
-    showAddrFallback(lat, lng);
-  }
+  showAddrFallback(lat, lng);
 }
 
 // 定位成功但找不到任何地址 → 顯示 GPS 點區塊
