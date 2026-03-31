@@ -278,11 +278,26 @@ async function loadReports() {
       <div class="spinner"></div>
       載入通報資料中...
     </div>`;
+
   try {
-    const url = GAS_URL + '?action=getReports';
-    const res = await fetch(url);
-    const data = await res.json();
-    allReports = data.reports || [];
+    await new Promise((resolve, reject) => {
+      const callbackName = 'gasCallback_' + Date.now();
+      const script = document.createElement('script');
+
+      window[callbackName] = function(data) {
+        allReports = data.reports || [];
+        delete window[callbackName];
+        document.body.removeChild(script);
+        resolve();
+      };
+
+      script.onerror = () => reject(new Error('載入失敗'));
+      script.src = GAS_URL + '?action=getReports&callback=' + callbackName;
+      document.body.appendChild(script);
+
+      setTimeout(() => reject(new Error('逾時')), 10000);
+    });
+
     renderList();
   } catch(e) {
     document.getElementById('listWrap').innerHTML = `
