@@ -646,51 +646,45 @@ function resetGpsBtn() {
   btn.disabled = false;
 }
 
-// 呼叫 NLSC 逆地址 API（主）
+// GPS 定位成功後 → 直接用 Google Maps 查附近門牌
+// 說明：NLSC TownVillagePointQuery 只能查村里歸屬，無法查附近門牌
+//       改用 Google Geocoding API 做逆地址查詢，可以找到巷弄門號
 async function queryNLSC(lng, lat) {
-  try {
-    const url = `${CONFIG.NLSC_API}/${lng}/${lat}/4326`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    resetGpsBtn();
-
-    // NLSC 回傳格式：addressList[].address 或 fullAddress
-    if (data && data.addressList && data.addressList.length > 0) {
-      // 過濾掉沒有號碼的結果，優先顯示有巷弄號的
-      const withNum = data.addressList.filter(a => {
-        const addr = a.address || a.fullAddress || '';
-        return /[0-9０-９]+號/.test(addr);
-      });
-      const toShow = (withNum.length > 0 ? withNum : data.addressList).slice(0, 5);
-      showAddrList(toShow, 'GPS');
-    } else {
-      // NLSC 無結果 → 備用 Google Maps
-      await queryGoogleMaps(lng, lat);
-    }
-  } catch(e) {
-    resetGpsBtn();
-    await queryGoogleMaps(lng, lat);
-  }
+  resetGpsBtn();
+  await queryGoogleMaps(lng, lat);
 }
 
-// 備用 Google Maps API
+// Google Maps Geocoding API 逆地址查詢
 async function queryGoogleMaps(lng, lat) {
   if (!CONFIG.GMAPS_KEY || CONFIG.GMAPS_KEY === 'YOUR_GOOGLE_MAPS_API_KEY') {
-    // 兩個 API 都沒有 → 提示手動輸入
     showAddrFallback(lat, lng);
     return;
   }
   try {
-    const url  = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=zh-TW&key=${CONFIG.GMAPS_KEY}`;
+    const url  = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=zh-TW&result_type=street_address|premise&key=${CONFIG.GMAPS_KEY}`;
     const res  = await fetch(url);
     const data = await res.json();
+
+    if (data.status === 'REQUEST_DENIED') {
+      console.log('Google API error:', data.error_message);
+      showAddrFallback(lat, lng);
+      return;
+    }
+
     if (data.results && data.results.length > 0) {
-      const addrs = data.results.slice(0, 3).map(r => ({ address: r.formatted_address }));
-      showAddrList(addrs, 'GPS');
+      // 過濾出有門牌號碼的結果（包含巷弄）
+      const withNum = data.results.filter(r =>
+        /[0-9]+號/.test(r.formatted_address)
+      );
+      const toShow = (withNum.length > 0 ? withNum : data.results)
+        .slice(0, 5)
+        .map(r => ({ address: r.formatted_address }));
+      showAddrList(toShow, 'GPS');
     } else {
       showAddrFallback(lat, lng);
     }
   } catch(e) {
+    console.log('Google Maps error:', e);
     showAddrFallback(lat, lng);
   }
 }
