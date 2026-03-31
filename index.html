@@ -366,23 +366,65 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 <!-- ══ PAGE 2：地點 ══ -->
 <div class="page" id="page2">
   <div class="page-title">通報地點</div>
-  <div class="page-sub">請告訴我們事件發生在哪裡</div>
+  <div class="page-sub">選擇 GPS 定位或自行輸入地址</div>
 
+  <!-- 方式一：GPS 定位 -->
+  <div class="field-label" style="margin-bottom:8px;">方式一　GPS 自動定位</div>
   <div class="privacy-note">
     🔒 位置資訊<strong>僅用於帶入通報地址</strong>，不會儲存您的 GPS 座標。
   </div>
-
   <button class="btn-gps" id="btnGps" onclick="startGps()">
-    🛰️ 自動定位附近地址
+    🛰️ 點此定位附近地址
   </button>
-
+  <!-- 地址清單（GPS 結果） -->
   <div id="addrList" class="addr-list"></div>
 
-  <div class="divider-text">或手動輸入</div>
+  <!-- GPS 點區塊（找不到門牌時出現） -->
+  <div id="gpsPointZone" style="display:none;">
+    <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:15px;font-weight:700;color:#0369a1;margin-bottom:8px;">
+        📍 附近無門牌，以 GPS 位置點通報
+      </div>
+      <div style="font-size:13px;color:#0c4a6e;margin-bottom:12px;line-height:1.7;">
+        系統已記錄您目前的精確位置，里長可點連結查看地圖。
+      </div>
+      <a id="gpsMapLink" href="#" target="_blank"
+        style="display:inline-flex;align-items:center;gap:8px;background:#0369a1;color:white;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:12px;">
+        🗺️ 確認我的位置（Google Maps）
+      </a>
+      <div class="field" style="margin-bottom:0;">
+        <div class="field-label">
+          這個位置在哪？
+          <span style="font-size:12px;color:var(--text2);font-weight:400;">（請補充說明）</span>
+        </div>
+        <input type="text" id="gpsPointDesc"
+          placeholder="例：民有公園涼亭旁、民有街巷弄中段"
+          oninput="onGpsPointDesc()" />
+      </div>
+    </div>
+  </div>
 
+  <!-- 分隔 -->
+  <div class="divider-text">方式二　手動輸入</div>
+
+  <!-- 方式二：手動輸入 -->
   <div class="field">
-    <div class="field-label">地點描述 <span class="req">*</span></div>
-    <input type="text" id="locationInput" placeholder="例：民有街 45 號前" oninput="checkPage2()" />
+    <div class="field-label">輸入地址 <span class="req">*</span></div>
+    <input type="text" id="locationInput" placeholder="例：民有街 45 號" oninput="onManualInput()" />
+  </div>
+
+  <!-- 樓層欄位（GPS 點選或手動輸入後出現） -->
+  <div class="field" id="floorField" style="display:none;">
+    <div class="field-label" style="display:flex;align-items:center;gap:6px;">
+      樓層
+      <span style="font-size:12px;color:var(--text2);font-weight:400;">（選填，預設 1 樓）</span>
+    </div>
+    <input type="number" id="floorInput" value="1" min="-5" max="99"
+      style="width:140px; font-size:20px; font-weight:700; text-align:center;"
+      oninput="updateFloor()" />
+    <div style="font-size:12px;color:var(--text2);margin-top:6px;">
+      地下室請輸入負數，例如 B1 填 -1
+    </div>
   </div>
 
   <button class="btn-next" id="btn2" onclick="goTo(3)" disabled>下一步　›</button>
@@ -431,8 +473,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="contact-fields" id="contactFields">
     <div class="field">
       <input type="text" id="nameInput" placeholder="姓名（選填）" style="margin-bottom:10px;" />
-      <input type="text" id="phoneInput" placeholder="例：0989-098-098（選填）"
-        oninput="formatPhone(this)" maxlength="12" />
+      <input type="text" id="phoneInput" placeholder="電話或 Line ID（選填）" />
     </div>
   </div>
 
@@ -471,15 +512,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">定位中...</div>
 </div>
-function formatPhone(el) {
-  let val = el.value.replace(/\D/g, ''); // 只保留數字
-  if (val.length > 4 && val.length <= 7) {
-    val = val.slice(0,4) + '-' + val.slice(4);
-  } else if (val.length > 7) {
-    val = val.slice(0,4) + '-' + val.slice(4,7) + '-' + val.slice(7,10);
-  }
-  el.value = val;
-}
+
 <script>
 // ══════════════════════════════
 // 設定區（部署後填入）
@@ -496,6 +529,7 @@ const state = {
   cat: null, catName: null,
   subcat: null,
   location: null, locationSource: null,
+  gpsLat: null, gpsLng: null, mapUrl: null,
   photoFile: null, photoBase64: null,
   description: null,
   name: null, phone: null,
@@ -578,79 +612,144 @@ function selectCat(el, cat) {
 }
 
 // ══ PAGE 2：地點 ══
+
+// GPS 按鈕 → 先跳隱私提示
 function startGps() {
   document.getElementById('privacyModal').classList.add('show');
 }
 function closePrivacyModal() {
   document.getElementById('privacyModal').classList.remove('show');
 }
+
+// 隱私同意 → 開始定位
 function confirmGps() {
   closePrivacyModal();
-  showLoading('定位中，請稍候...');
+  const btn = document.getElementById('btnGps');
+  btn.textContent = '📡 定位中，請稍候...';
+  btn.disabled = true;
+
   if (!navigator.geolocation) {
-    hideLoading();
+    resetGpsBtn();
     alert('您的裝置不支援 GPS 定位，請手動輸入地址。');
     return;
   }
   navigator.geolocation.getCurrentPosition(
     pos => queryNLSC(pos.coords.longitude, pos.coords.latitude),
-    err => {
-      hideLoading();
-      alert('無法取得位置，請手動輸入地址。');
-    },
-    { timeout: 10000 }
+    () => { resetGpsBtn(); alert('無法取得位置，請手動輸入地址。'); },
+    { timeout: 10000, enableHighAccuracy: true }
   );
 }
 
+function resetGpsBtn() {
+  const btn = document.getElementById('btnGps');
+  btn.textContent = '🛰️ 點此定位附近地址';
+  btn.disabled = false;
+}
+
+// 呼叫 NLSC 逆地址 API（主）
 async function queryNLSC(lng, lat) {
   try {
     const url = `${CONFIG.NLSC_API}/${lng}/${lat}/4326`;
-    const res = await fetch(url);
+    const res  = await fetch(url);
     const data = await res.json();
-    hideLoading();
+    resetGpsBtn();
+
+    // NLSC 回傳格式：addressList[].address 或 fullAddress
     if (data && data.addressList && data.addressList.length > 0) {
-      showAddrList(data.addressList.slice(0, 5), 'NLSC');
+      // 過濾掉沒有號碼的結果，優先顯示有巷弄號的
+      const withNum = data.addressList.filter(a => {
+        const addr = a.address || a.fullAddress || '';
+        return /[0-9０-９]+號/.test(addr);
+      });
+      const toShow = (withNum.length > 0 ? withNum : data.addressList).slice(0, 5);
+      showAddrList(toShow, 'GPS');
     } else {
+      // NLSC 無結果 → 備用 Google Maps
       await queryGoogleMaps(lng, lat);
     }
   } catch(e) {
+    resetGpsBtn();
     await queryGoogleMaps(lng, lat);
   }
 }
 
+// 備用 Google Maps API
 async function queryGoogleMaps(lng, lat) {
   if (!CONFIG.GMAPS_KEY || CONFIG.GMAPS_KEY === 'YOUR_GOOGLE_MAPS_API_KEY') {
-    hideLoading();
-    // 備用：顯示座標供確認
-    const approx = `GPS 座標附近 (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-    document.getElementById('locationInput').value = approx;
-    state.location = approx;
-    state.locationSource = '座標';
-    checkPage2();
+    // 兩個 API 都沒有 → 提示手動輸入
+    showAddrFallback(lat, lng);
     return;
   }
   try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=zh-TW&key=${CONFIG.GMAPS_KEY}`;
-    const res = await fetch(url);
+    const url  = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=zh-TW&key=${CONFIG.GMAPS_KEY}`;
+    const res  = await fetch(url);
     const data = await res.json();
-    hideLoading();
     if (data.results && data.results.length > 0) {
       const addrs = data.results.slice(0, 3).map(r => ({ address: r.formatted_address }));
-      showAddrList(addrs, 'Google');
+      showAddrList(addrs, 'GPS');
     } else {
-      document.getElementById('locationInput').value = '請手動輸入地址';
+      showAddrFallback(lat, lng);
     }
   } catch(e) {
-    hideLoading();
-    alert('定位失敗，請手動輸入地址。');
+    showAddrFallback(lat, lng);
   }
 }
 
+// 定位成功但找不到任何地址 → 顯示 GPS 點區塊
+function showAddrFallback(lat, lng) {
+  // 隱藏地址清單
+  document.getElementById('addrList').innerHTML = '';
+
+  // 儲存座標到 state
+  state.gpsLat = lat;
+  state.gpsLng = lng;
+  state.locationSource = 'GPS點';
+
+  // Google Maps 連結
+  const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+  document.getElementById('gpsMapLink').href = mapUrl;
+
+  // 顯示 GPS 點區塊
+  document.getElementById('gpsPointZone').style.display = 'block';
+
+  // 隱藏樓層（GPS點不需要樓層）
+  hideFloorField();
+
+  // 設定初始地點（無說明時用座標）
+  state.location = `GPS位置點（${lat.toFixed(5)}, ${lng.toFixed(5)}）`;
+  state.mapUrl   = mapUrl;
+
+  // 讓送出按鈕可用（GPS點本身就是有效地點）
+  document.getElementById('btn2').disabled = false;
+
+  // 聚焦補充說明
+  document.getElementById('gpsPointDesc').focus();
+}
+
+// GPS 點補充說明輸入
+function onGpsPointDesc() {
+  const desc = document.getElementById('gpsPointDesc').value.trim();
+  const lat  = state.gpsLat;
+  const lng  = state.gpsLng;
+  if (desc) {
+    state.location = `${desc}（GPS：${lat.toFixed(5)}, ${lng.toFixed(5)}）`;
+  } else {
+    state.location = `GPS位置點（${lat.toFixed(5)}, ${lng.toFixed(5)}）`;
+  }
+  // 確保按鈕可用
+  document.getElementById('btn2').disabled = false;
+}
+
+// 顯示 GPS 找到的地址清單
 function showAddrList(addrs, source) {
   const list = document.getElementById('addrList');
-  list.innerHTML = '';
-  addrs.forEach((a, i) => {
-    const addr = a.address || a.fullAddress || '';
+  list.innerHTML = '<div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;">📍 請選擇最近的地址</div>';
+
+  addrs.forEach(a => {
+    // 取出純地址字串，去掉縣市前綴讓顯示更簡潔
+    let addr = (a.address || a.fullAddress || '').trim();
+    addr = addr.replace(/^新北市中和區/, '中和區');  // 簡化顯示
+
     if (!addr) return;
     const item = document.createElement('div');
     item.className = 'addr-item';
@@ -658,31 +757,83 @@ function showAddrList(addrs, source) {
     item.onclick = () => {
       document.querySelectorAll('.addr-item').forEach(x => x.classList.remove('selected'));
       item.classList.add('selected');
-      state.location = addr;
-      state.locationSource = source + '自動';
-      document.getElementById('locationInput').value = addr;
+      // 填入輸入框（完整地址）
+      const fullAddr = (a.address || a.fullAddress || '').trim();
+      document.getElementById('locationInput').value = fullAddr;
+      state.location     = fullAddr;
+      state.locationSource = 'GPS自動';
+      showFloorField();
       checkPage2();
     };
     list.appendChild(item);
   });
-  // 加「以上皆非」選項
+
+  // 「以上皆非」選項
   const none = document.createElement('div');
   none.className = 'addr-item';
   none.innerHTML = '<span style="color:var(--text2)">以上皆非，我自己輸入</span>';
   none.onclick = () => {
     document.querySelectorAll('.addr-item').forEach(x => x.classList.remove('selected'));
+    document.getElementById('locationInput').value = '';
     document.getElementById('locationInput').focus();
+    hideFloorField();
+    checkPage2();
   };
   list.appendChild(none);
 }
 
-function checkPage2() {
+// 手動輸入時的處理
+function onManualInput() {
   const val = document.getElementById('locationInput').value.trim();
+  // 取消 GPS 清單的選取狀態
+  document.querySelectorAll('.addr-item').forEach(x => x.classList.remove('selected'));
+  state.locationSource = '手動';
   if (val) {
-    state.location = val;
-    state.locationSource = state.locationSource || '手動';
+    showFloorField();
+  } else {
+    hideFloorField();
   }
-  document.getElementById('btn2').disabled = !val;
+  checkPage2();
+}
+
+// 顯示樓層欄位
+function showFloorField() {
+  document.getElementById('floorField').style.display = 'block';
+}
+function hideFloorField() {
+  document.getElementById('floorField').style.display = 'none';
+  document.getElementById('floorInput').value = '1';
+}
+
+// 樓層更新 → 組合最終地址
+function updateFloor() {
+  checkPage2();
+}
+
+// 檢查 Page 2 是否可以繼續
+function checkPage2() {
+  const addr  = document.getElementById('locationInput').value.trim();
+  const floor = parseInt(document.getElementById('floorInput').value) || 1;
+
+  if (!addr) {
+    document.getElementById('btn2').disabled = true;
+    state.location = '';
+    return;
+  }
+
+  // 組合地址＋樓層
+  let floorText = '';
+  if (floor < 0) {
+    floorText = ` B${Math.abs(floor)}`;
+  } else if (floor === 1) {
+    floorText = '';            // 1樓不特別標示，保持簡潔
+  } else {
+    floorText = ` ${floor}樓`;
+  }
+
+  state.location = addr + floorText;
+  state.locationSource = state.locationSource || '手動';
+  document.getElementById('btn2').disabled = false;
 }
 
 // ══ PAGE 3：照片 ══
@@ -745,8 +896,7 @@ async function submitReport() {
 
   showLoading('送出通報中...');
 
-  const reportId = 'MIY-' + new Date().getFullYear() + '-' + 
-                   String(Math.floor(Math.random()*9000)+1000);
+  const reportId = 'MIY-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
 
   const payload = {
     reportId,
@@ -757,6 +907,7 @@ async function submitReport() {
     subcat: state.subcat,
     location: state.location,
     locationSource: state.locationSource,
+    mapUrl: state.mapUrl || '',
     description: state.description,
     name: state.name,
     phone: state.phone,
@@ -764,15 +915,15 @@ async function submitReport() {
   };
 
   try {
-    // 用 no-cors 模式送出，避免 CORS 問題
-    await fetch(CONFIG.GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch(err) {
-    Logger.log('fetch error: ' + err);
+    if (CONFIG.GAS_URL && CONFIG.GAS_URL !== 'YOUR_GAS_WEBHOOK_URL') {
+      await fetch(CONFIG.GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+  } catch(e) {
+    console.log('GAS error:', e);
   }
 
   hideLoading();
@@ -782,6 +933,7 @@ async function submitReport() {
   document.querySelector('.step-indicator').style.display = 'none';
   window.scrollTo(0, 0);
 }
+
 function closeLiff() {
   try { liff.closeWindow(); } catch(e) { window.close(); }
 }
