@@ -431,7 +431,8 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="contact-fields" id="contactFields">
     <div class="field">
       <input type="text" id="nameInput" placeholder="姓名（選填）" style="margin-bottom:10px;" />
-      <input type="text" id="phoneInput" placeholder="電話或 Line ID（選填）" />
+      <input type="text" id="phoneInput" placeholder="例：0989-098-098（選填）"
+        oninput="formatPhone(this)" maxlength="12" />
     </div>
   </div>
 
@@ -470,7 +471,15 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">定位中...</div>
 </div>
-
+function formatPhone(el) {
+  let val = el.value.replace(/\D/g, ''); // 只保留數字
+  if (val.length > 4 && val.length <= 7) {
+    val = val.slice(0,4) + '-' + val.slice(4);
+  } else if (val.length > 7) {
+    val = val.slice(0,4) + '-' + val.slice(4,7) + '-' + val.slice(7,10);
+  }
+  el.value = val;
+}
 <script>
 // ══════════════════════════════
 // 設定區（部署後填入）
