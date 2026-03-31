@@ -454,6 +454,14 @@ function selectStatus(status, el) {
   selectedStatus = status;
   document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
+  const zone = document.getElementById('completePhotoZone');
+  if (zone) {
+    if (status === '已完成') {
+      zone.classList.add('show');
+    } else {
+      zone.classList.remove('show');
+    }
+  }
 }
 
 function closePanel(e) {
