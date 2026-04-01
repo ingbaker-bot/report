@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>建民里管理後台</title>
+<script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --jade: #1a6b4a; --jade-light: #2a8a5f; --jade-pale: #e8f5ef;
+  --ink: #0f1f1a; --mist: #f2f7f5; --border: #d4e8df; --text2: #5a7068;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: var(--ink); }
+
+.header {
+  background: var(--jade); color: white; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-title { font-size: 17px; font-weight: 900; }
+.header-sub { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+.btn-refresh {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  color: white; padding: 7px 12px; border-radius: 20px; font-size: 13px; font-family: inherit; cursor: pointer;
+}
+.tabs {
+  background: white; border-bottom: 1px solid var(--border);
+  display: flex; overflow-x: auto; scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text2);
+  cursor: pointer; white-space: nowrap; border-bottom: 2.5px solid transparent;
+  background: none; border-top: none; border-left: none; border-right: none;
+  font-family: inherit; display: flex; align-items: center; gap: 6px;
+}
+.tab.active { color: var(--jade); border-bottom-color: var(--jade); }
+.tab-count { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
+.count-pending { background: #fee2e2; color: #991b1b; }
+.count-process { background: #dbeafe; color: #1e40af; }
+.count-done    { background: var(--jade-pale); color: var(--jade); }
+.count-all     { background: #f1f5f9; color: #475569; }
+
+.main { padding: 14px; max-width: 520px; margin: 0 auto; }
+.report-list { display: flex; flex-direction: column; gap: 10px; }
+.report-card {
+  background: white; border-radius: 14px; border: 1.5px solid var(--border);
+  cursor: pointer; overflow: hidden;
+}
+.card-top { padding: 14px 16px 10px; }
+.card-row1 { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.card-title { font-size: 15px; font-weight: 700; }
+.status-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; margin-left: 8px; }
+.badge-pending { background: #fee2e2; color: #991b1b; }
+.badge-process { background: #dbeafe; color: #1e40af; }
+.badge-done    { background: var(--jade-pale); color: var(--jade); }
+.card-meta { font-size: 12px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 8px; }
+.card-desc { font-size: 12px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+.card-id { font-family: 'DM Mono', monospace; font-size: 10px; color: #94a3b8; margin-top: 4px; }
+
+.panel-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.panel-overlay.show { opacity: 1; pointer-events: all; }
+.panel {
+  position: fixed; bottom: 0; left: 0; right: 0; background: white;
+  border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto;
+  transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+  z-index: 101; max-width: 520px; margin: 0 auto;
+}
+.panel-overlay.show .panel { transform: translateY(0); }
+.panel-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 12px auto 0; }
+.panel-header {
+  padding: 14px 18px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-size: 16px; font-weight: 900; }
+.btn-close-panel {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--mist);
+  border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.panel-body { padding: 16px 18px 36px; }
+
+.detail-label { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 0.06em; margin-bottom: 6px; }
+.detail-val { font-size: 15px; font-weight: 600; }
+.detail-val.mono { font-family: 'DM Mono', monospace; font-size: 13px; color: #7c3aed; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.detail-cell { background: var(--mist); border-radius: 10px; padding: 10px 12px; }
+.detail-section { margin-bottom: 14px; }
+
+.photo-link {
+  display: flex; align-items: center; gap: 8px; background: #f0f9ff;
+  border: 1px solid #bae6fd; border-radius: 10px; padding: 10px 14px;
+  font-size: 13px; color: #0369a1; font-weight: 600; text-decoration: none;
+}
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+.field-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 7px; display: block; }
+.status-btns { display: flex; gap: 8px; margin-bottom: 14px; }
+.status-btn {
+  flex: 1; padding: 12px 8px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  font-family: inherit; cursor: pointer; border: 2px solid transparent; text-align: center;
+}
+.sBtn-pending { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.sBtn-process { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.sBtn-done    { background: var(--jade-pale); color: var(--jade); border-color: var(--jade); }
+.status-btn.active { transform: scale(1.03); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+textarea {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 15px; font-family: inherit; resize: none; height: 90px; line-height: 1.6;
+  outline: none; color: var(--ink); background: white;
+}
+textarea:focus { border-color: var(--jade); }
+
+/* 完成照片區 */
+.complete-photo-zone { display: none; margin-bottom: 14px; }
+.complete-photo-zone.show { display: block; }
+.photo-upload-box {
+  border: 2px dashed var(--border); border-radius: 12px; padding: 20px;
+  text-align: center; cursor: pointer; background: white;
+}
+.complete-preview { margin-top: 10px; display: none; }
+.complete-preview img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; border: 2px solid var(--jade); }
+.retake { font-size: 13px; color: var(--jade); text-align: center; margin-top: 6px; cursor: pointer; font-weight: 600; }
+
+.btn-save {
+  width: 100%; padding: 16px; background: var(--jade); color: white;
+  border: none; border-radius: 14px; font-size: 17px; font-weight: 900;
+  font-family: inherit; cursor: pointer; margin-top: 10px;
+}
+.btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
+
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text2); font-size: 14px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.loading-wrap { text-align: center; padding: 40px; color: var(--text2); }
+.spinner {
+  width: 36px; height: 36px; border: 3px solid var(--border);
+  border-top-color: var(--jade); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: white; padding: 12px 24px; border-radius: 24px;
+  font-size: 14px; font-weight: 600; transition: transform 0.3s; z-index: 200; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div style="font-size:22px">⚙️</div>
+    <div>
+      <div class="header-title">民有里管理後台</div>
+      <div class="header-sub">通報管理系統</div>
+    </div>
+  </div>
+  <button class="btn-refresh" onclick="loadReports()">🔄 重新整理</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-pending" onclick="switchTab('pending')">
+    待處理 <span class="tab-count count-pending" id="cnt-pending">0</span>
+  </button>
+  <button class="tab" id="tab-process" onclick="switchTab('process')">
+    處理中 <span class="tab-count count-process" id="cnt-process">0</span>
+  </button>
+  <button class="tab" id="tab-done" onclick="switchTab('done')">
+    已完成 <span class="tab-count count-done" id="cnt-done">0</span>
+  </button>
+  <button class="tab" id="tab-all" onclick="switchTab('all')">
+    全部 <span class="tab-count count-all" id="cnt-all">0</span>
+  </button>
+</div>
+
+<div class="main">
+  <div id="listWrap">
+    <div class="loading-wrap"><div class="spinner"></div>載入通報資料中...</div>
+  </div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel(event)">
+  <div class="panel">
+    <div class="panel-handle"></div>
+    <div class="panel-header">
+      <div class="panel-title" id="panelTitle">通報詳情</div>
+      <button class="btn-close-panel" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_LIFF_ID = '2009643244-9i0hXQpm';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzLLT6Kik_VTS6o1n3rnuWGe0quPBah0_Gb3j_Jzi6DtXI9TW6tCGDvorjlqGMF6bnu/exec';
+
+let allReports = [], currentTab = 'pending', currentReport = null;
+let selectedStatus = null, completePhotoBase64 = null;
+
+async function initLiff() {
+  try {
+    await liff.init({ liffId: ADMIN_LIFF_ID });
+    if (!liff.isLoggedIn()) liff.login();
+  } catch(e) {}
+  loadReports();
+}
+
+async function loadReports() {
+  document.getElementById('listWrap').innerHTML =
+    '<div class="loading-wrap"><div class="spinner"></div>載入通報資料中...</div>';
+  try {
+    // 直接用 fetch GET，GAS ContentService 允許跨域 GET 請求
+    const res  = await fetch(GAS_URL + '?action=getReports', {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    const data = await res.json();
+    allReports = data.reports || [];
+    renderList();
+  } catch(e) {
+    console.log('loadReports error:', e);
+    document.getElementById('listWrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">⚠️</div>載入失敗，請點重新整理</div>';
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  const filtered = currentTab === 'all' ? allReports : allReports.filter(r => {
+    if (currentTab === 'pending') return r.status === '待處理';
+    if (currentTab === 'process') return r.status === '處理中';
+    if (currentTab === 'done')    return r.status === '已完成';
+  });
+
+  document.getElementById('cnt-pending').textContent = allReports.filter(r => r.status === '待處理').length;
+  document.getElementById('cnt-process').textContent = allReports.filter(r => r.status === '處理中').length;
+  document.getElementById('cnt-done').textContent    = allReports.filter(r => r.status === '已完成').length;
+  document.getElementById('cnt-all').textContent     = allReports.length;
+
+  if (!filtered.length) {
+    const lbl = {pending:'待處理',process:'處理中',done:'已完成',all:''};
+    document.getElementById('listWrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">✅</div>目前沒有' + lbl[currentTab] + '的通報</div>';
+    return;
+  }
+
+  const bc = {'待處理':'badge-pending','處理中':'badge-process','已完成':'badge-done'};
+  document.getElementById('listWrap').innerHTML = '<div class="report-list">' +
+    filtered.map(r => `
+      <div class="report-card" onclick="openPanel('${r.reportId}')">
+        <div class="card-top">
+          <div class="card-row1">
+            <div class="card-title">${r.cat} — ${r.subcat}</div>
+            <span class="status-badge ${bc[r.status]||''}">${r.status}</span>
+          </div>
+          <div class="card-meta">
+            <span>📍 ${r.location}</span>
+            <span>📅 ${(r.timestamp||'').slice(0,10)}</span>
+          </div>
+          ${r.description ? '<div class="card-desc">'+r.description+'</div>' : ''}
+          <div class="card-id">${r.reportId}</div>
+        </div>
+      </div>`).join('') + '</div>';
+}
+
+function openPanel(reportId) {
+  currentReport = allReports.find(r => r.reportId === reportId);
+  if (!currentReport) return;
+  selectedStatus = currentReport.status;
+  completePhotoBase64 = null;
+
+  document.getElementById('panelTitle').textContent = currentReport.cat + ' — ' + currentReport.subcat;
+  document.getElementById('panelBody').innerHTML = buildPanelHTML(currentReport);
+  document.getElementById('panelOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildPanelHTML(r) {
+  return `
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-label">通報編號</div><div class="detail-val mono">${r.reportId}</div></div>
+      <div class="detail-cell"><div class="detail-label">通報時間</div><div class="detail-val" style="font-size:13px">${r.timestamp||''}</div></div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-label">類別</div><div class="detail-val">${r.cat}</div></div>
+      <div class="detail-cell"><div class="detail-label">子項目</div><div class="detail-val">${r.subcat}</div></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-label">地點</div>
+      <div class="detail-val">📍 ${r.location}</div>
+    </div>
+    ${r.description ? `<div class="detail-section"><div class="detail-label">描述</div><div class="detail-val" style="font-weight:400;font-size:14px;line-height:1.7">${r.description}</div></div>` : ''}
+    ${(r.name||r.phone) ? `<div class="detail-grid">
+      ${r.name  ? '<div class="detail-cell"><div class="detail-label">姓名</div><div class="detail-val">'+r.name+'</div></div>' : ''}
+      ${r.phone ? '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+r.phone+'</div></div>' : ''}
+    </div>` : ''}
+    ${r.photoUrl ? `<div class="detail-section"><div class="detail-label">里民上傳照片</div>
+      <a class="photo-link" href="${r.photoUrl}" target="_blank">🖼️ 點此查看里民照片</a></div>` : ''}
+
+    <div class="divider"></div>
+
+    <span class="field-label">更新狀態</span>
+    <div class="status-btns">
+      <button class="status-btn sBtn-pending ${r.status==='待處理'?'active':''}" data-status="待處理" onclick="selectStatus('待處理',this)">⏳ 待處理</button>
+      <button class="status-btn sBtn-process ${r.status==='處理中'?'active':''}" data-status="處理中" onclick="selectStatus('處理中',this)">🔧 處理中</button>
+      <button class="status-btn sBtn-done ${r.status==='已完成'?'active':''}" data-status="已完成" onclick="selectStatus('已完成',this)">✅ 已完成</button>
+    </div>
+
+    <div class="complete-photo-zone ${r.status==='已完成'?'show':''}" id="completePhotoZone">
+      <span class="field-label">上傳處理完成照片（選填）</span>
+      <div class="photo-upload-box" id="uploadBox" onclick="document.getElementById('completeInput').click()">
+        <input type="file" id="completeInput" accept="image/*" capture="environment"
+          style="display:none" onchange="handleCompletePhoto(event)" />
+        <div style="font-size:28px;margin-bottom:6px">📸</div>
+        <div style="font-size:14px;font-weight:700">點此拍攝處理後照片</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">上傳後將連結傳送給里民</div>
+      </div>
+      <div class="complete-preview" id="completePreview">
+        <img id="completeImg" src="" />
+        <div class="retake" onclick="retakePhoto()">🔄 重新拍攝</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <span class="field-label">里長備註</span>
+      <textarea id="noteInput" placeholder="輸入處理說明，例如：已通報水利局，預計週五處理...">${r.note||''}</textarea>
+    </div>
+
+    <button class="btn-save" id="btnSave" onclick="saveReport()">💾 儲存並通知里民</button>
+  `;
+}
+
+function selectStatus(status, el) {
+  selectedStatus = status;
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const zone = document.getElementById('completePhotoZone');
+  if (zone) zone.className = 'complete-photo-zone' + (status === '已完成' ? ' show' : '');
+}
+
+function handleCompletePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    completePhotoBase64 = ev.target.result;
+    document.getElementById('completeImg').src = ev.target.result;
+    document.getElementById('completePreview').style.display = 'block';
+    document.getElementById('uploadBox').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function retakePhoto() {
+  completePhotoBase64 = null;
+  document.getElementById('completePreview').style.display = 'none';
+  document.getElementById('uploadBox').style.display = 'block';
+  document.getElementById('completeInput').value = '';
+}
+
+function closePanel(e) {
+  if (e && e.target !== document.getElementById('panelOverlay')) return;
+  document.getElementById('panelOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+  currentReport = null; completePhotoBase64 = null;
+}
+
+async function saveReport() {
+  if (!currentReport) return;
+  const note = document.getElementById('noteInput').value;
+  const btn = document.getElementById('btnSave');
+  btn.textContent = '⏳ 儲存中...'; btn.disabled = true;
+
+  try {
+    const _params = new URLSearchParams();
+    _params.append('data', JSON.stringify({
+      action: 'updateStatus',
+      reportId: currentReport.reportId,
+      status: selectedStatus,
+      note: note,
+      completePhotoBase64: completePhotoBase64 || null
+    }));
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: _params
+    });
+
+    const idx = allReports.findIndex(r => r.reportId === currentReport.reportId);
+    if (idx !== -1) { allReports[idx].status = selectedStatus; allReports[idx].note = note; }
+
+    showToast('✅ 已儲存，通知已發送給里民');
+    setTimeout(() => {
+      document.getElementById('panelOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+      renderList();
+    }, 1200);
+  } catch(e) {
+    showToast('⚠️ 儲存失敗，請重試');
+    btn.textContent = '💾 儲存並通知里民'; btn.disabled = false;
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+initLiff();
+</script>
+</body>
+</html>
