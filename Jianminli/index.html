@@ -1,3 +1,4 @@
+/* ── index-v1.1 ── */
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -398,7 +399,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
           <span style="font-size:12px;color:var(--text2);font-weight:400;">（請補充說明）</span>
         </div>
         <input type="text" id="gpsPointDesc"
-          placeholder="例：民有公園涼亭旁、民有街巷弄中段"
+          placeholder="例：建民公園涼亭旁、建民街巷弄中段"
           oninput="onGpsPointDesc()" />
       </div>
     </div>
@@ -410,7 +411,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <!-- 方式二：手動輸入 -->
   <div class="field">
     <div class="field-label">輸入地址 <span class="req">*</span></div>
-    <input type="text" id="locationInput" placeholder="例：民有街 45 號" oninput="onManualInput()" />
+    <input type="text" id="locationInput" placeholder="例：建民街 45 號" oninput="onManualInput()" />
   </div>
 
   <!-- 樓層欄位（GPS 點選或手動輸入後出現） -->
@@ -489,6 +490,12 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div>通報編號</div>
   <div class="report-id" id="successId">MIY-2026-0001</div>
   <div class="success-sub" style="font-size:14px;">請截圖保存編號，以便日後查詢進度</div>
+  <!-- 無 UserID 提示（雙開 Line 或瀏覽器開啟時顯示） -->
+  <div id="noUidWarning" style="display:none;margin:16px 0;padding:14px 16px;background:#FEF3C7;border:1.5px solid #FCD34D;border-radius:12px;font-size:13px;color:#92400E;line-height:1.7;">
+    ⚠️ <strong>注意：系統無法識別您的 Line 帳號</strong><br>
+    您將<strong>無法收到</strong>處理進度的 Line 通知。<br>
+    建議從 Line 官方帳號的圖文選單開啟通報表單。
+  </div>
   <button class="btn-close" onclick="closeLiff()">關閉</button>
 </div>
 
@@ -518,8 +525,8 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 // 設定區（部署後填入）
 // ══════════════════════════════
 const CONFIG = {
-  LIFF_ID: '2009667380-LQ3kTHBw',       // ← 你的 LIFF ID
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbxq_i33h0ztCWMBmvFZMiKiISZjzACDyHAF7crcDSMeY6lU3__5-g99BFLaps4o3hM/exec',       // ← 部署 GAS 後填入
+  LIFF_ID: '2009643244-BgwBKoP8',       // ← 你的 LIFF ID
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzLLT6Kik_VTS6o1n3rnuWGe0quPBah0_Gb3j_Jzi6DtXI9TW6tCGDvorjlqGMF6bnu/exec',       // ← 部署 GAS 後填入
   NLSC_API: 'https://api.nlsc.gov.tw/other/TownVillagePointQuery',
   GMAPS_KEY: 'AIzaSyBFoTy6ZmmVCjNYHIvUEl0I8n2VZKkm1RA'  // ← 申請後填入
 };
@@ -661,7 +668,7 @@ function queryNearbyFromGAS(lat, lng) {
                + '?action=nearby'
                + '&lat=' + lat
                + '&lng=' + lng
-               + '&radius=15'
+               + '&radius=20'
                + '&callback=' + cb;
 
     let done = false;
@@ -762,7 +769,7 @@ function showAddrList(addrs, source) {
   addrs.forEach(a => {
     // 取出純地址字串，去掉縣市前綴讓顯示更簡潔
     let addr = (a.address || a.fullAddress || '').trim();
-    addr = addr.replace(/^新北市中和區/, '中和區');  // 簡化顯示
+    addr = addr.replace(/^台北市士林區/, '士林區');  // 簡化顯示
 
     if (!addr) return;
     const item = document.createElement('div');
@@ -949,6 +956,12 @@ async function submitReport() {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-success').classList.add('active');
   document.querySelector('.step-indicator').style.display = 'none';
+
+  // 如果沒有 UserID，顯示警告
+  if (!state.userId || state.userId === 'unknown') {
+    document.getElementById('noUidWarning').style.display = 'block';
+  }
+
   window.scrollTo(0, 0);
 }
 
