@@ -218,22 +218,16 @@ async function loadReports() {
   document.getElementById('listWrap').innerHTML =
     '<div class="loading-wrap"><div class="spinner"></div>載入通報資料中...</div>';
   try {
-    await new Promise((resolve, reject) => {
-      const cb = 'cb_' + Date.now();
-      const s = document.createElement('script');
-      window[cb] = d => {
-        allReports = d.reports || [];
-        delete window[cb];
-        document.body.removeChild(s);
-        resolve();
-      };
-      s.onerror = () => reject(new Error('失敗'));
-      s.src = GAS_URL + '?action=getReports&callback=' + cb;
-      document.body.appendChild(s);
-      setTimeout(() => reject(new Error('逾時')), 20000);  // 延長到 20 秒
+    // 直接用 fetch GET，GAS ContentService 允許跨域 GET 請求
+    const res  = await fetch(GAS_URL + '?action=getReports', {
+      method: 'GET',
+      redirect: 'follow'
     });
+    const data = await res.json();
+    allReports = data.reports || [];
     renderList();
   } catch(e) {
+    console.log('loadReports error:', e);
     document.getElementById('listWrap').innerHTML =
       '<div class="empty-state"><div class="empty-icon">⚠️</div>載入失敗，請點重新整理</div>';
   }
