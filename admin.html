@@ -230,7 +230,7 @@ async function loadReports() {
       s.onerror = () => reject(new Error('失敗'));
       s.src = GAS_URL + '?action=getReports&callback=' + cb;
       document.body.appendChild(s);
-      setTimeout(() => reject(new Error('逾時')), 10000);
+      setTimeout(() => reject(new Error('逾時')), 20000);  // 延長到 20 秒
     });
     renderList();
   } catch(e) {
@@ -393,16 +393,18 @@ async function saveReport() {
   btn.textContent = '⏳ 儲存中...'; btn.disabled = true;
 
   try {
+    const _params = new URLSearchParams();
+    _params.append('data', JSON.stringify({
+      action: 'updateStatus',
+      reportId: currentReport.reportId,
+      status: selectedStatus,
+      note: note,
+      completePhotoBase64: completePhotoBase64 || null
+    }));
     await fetch(GAS_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'updateStatus',
-        reportId: currentReport.reportId,
-        status: selectedStatus,
-        note: note,
-        completePhotoBase64: completePhotoBase64 || null
-      })
+      method: 'POST',
+      mode: 'no-cors',
+      body: _params
     });
 
     const idx = allReports.findIndex(r => r.reportId === currentReport.reportId);
