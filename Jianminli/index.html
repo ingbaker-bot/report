@@ -1,4 +1,4 @@
-/* ── index-v1.5 ── */
+/* ── index-v1.8 ── */
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -962,7 +962,15 @@ function toggleContact() {
 // ══ 送出通報 ══
 async function submitReport() {
   state.name = document.getElementById('nameInput').value;
-  state.phone = document.getElementById('phoneInput').value;
+
+  // 取得電話並去除前後空白
+  let phoneStr = document.getElementById('phoneInput').value.trim();
+
+  // 【新增】格式化邏輯：如果是 09 開頭且總共 10 碼數字，轉為 09XX-XXX-XXX
+  if (/^09\d{8}$/.test(phoneStr)) {
+    phoneStr = phoneStr.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+  }
+  state.phone = phoneStr;
 
   showLoading('送出通報中...');
 
