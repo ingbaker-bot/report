@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里管理後台v1.8</title>
+<title>民有里管理後台v1.9</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -204,15 +204,45 @@ textarea:focus { border-color: var(--jade); }
 const ADMIN_LIFF_ID = '2009667380-qs3zovvv';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxq_i33h0ztCWMBmvFZMiKiISZjzACDyHAF7crcDSMeY6lU3__5-g99BFLaps4o3hM/exec';
 
+// 【新增】在這裡填入里長的 Line UserID (可以設定多個)
+const ADMIN_UIDS = ['U56dab987a29938f8e4a5c07e025bffe5']; 
+
 let allReports = [], currentTab = 'pending', currentReport = null;
 let selectedStatus = null, completePhotoBase64 = null;
 
 async function initLiff() {
   try {
     await liff.init({ liffId: ADMIN_LIFF_ID });
-    if (!liff.isLoggedIn()) liff.login();
-  } catch(e) {}
-  loadReports();
+
+    // 1. 尚未登入則要求登入
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+
+    // 2. 取得使用者資訊
+    const profile = await liff.getProfile();
+    const userId = profile.userId;
+
+    // 3. 驗證身分是否為里長
+    if (ADMIN_UIDS.includes(userId)) {
+      // 是里長，正常載入資料
+      loadReports();
+    } else {
+      // 不是里長，直接清空畫面並顯示阻擋訊息
+      document.body.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; background:var(--mist);">
+          <div style="font-size:64px; margin-bottom:16px;">🛑</div>
+          <div style="font-size:24px; font-weight:900; color:var(--jade); margin-bottom:12px;">權限不足</div>
+          <div style="font-size:16px; color:var(--text2); line-height:1.6; margin-bottom:24px;">這是里長專屬的回覆後台<br>一般里民無法進入喔！</div>
+          <button onclick="liff.closeWindow()" style="padding:14px 32px; background:var(--jade); color:white; border:none; border-radius:12px; font-size:18px; font-weight:700;">關閉視窗</button>
+        </div>
+      `;
+    }
+
+  } catch(e) {
+    console.log('LIFF init error:', e);
+  }
 }
 
 async function loadReports() {
