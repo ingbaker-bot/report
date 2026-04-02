@@ -32,11 +32,13 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
-  padding: 12px 16px; font-size: 16px; font-weight: 600; color: var(--text2);
+  flex: 1; justify-content: center; /* 【新增】讓四個頁籤平均分配總寬度，並讓文字置中 */
+  padding: 12px 4px; /* 【修改】將左右的留白從 16px 縮減到 4px */
+  font-size: 16px; font-weight: 600; color: var(--text2);
   cursor: pointer; white-space: nowrap;
   border-bottom: 2.5px solid transparent;
   background: none; border-top: none; border-left: none; border-right: none;
-  font-family: inherit; display: flex; align-items: center; gap: 6px;
+  font-family: inherit; display: flex; align-items: center; gap: 4px; /* 【修改】將文字跟數字圈圈的間距微調為 4px */
 }
 .tab.active { color: var(--jade); border-bottom-color: var(--jade); }
 .tab-count { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
