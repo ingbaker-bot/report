@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建民里管理後台v1.7</title>
+<title>建民里管理後台v1.8</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -308,7 +308,16 @@ function buildPanelHTML(r) {
     ${r.description ? `<div class="detail-section"><div class="detail-label">描述</div><div class="detail-val" style="font-weight:400;font-size:14px;line-height:1.7">${r.description}</div></div>` : ''}
     ${(r.name||r.phone) ? `<div class="detail-grid">
       ${r.name  ? '<div class="detail-cell"><div class="detail-label">姓名</div><div class="detail-val">'+r.name+'</div></div>' : ''}
-      ${r.phone ? '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+r.phone+'</div></div>' : ''}
+      ${r.phone ?
+      (() => {
+        let dPhone = r.phone.toString();
+        // 【新增】如果舊資料是 9 開頭且只有 9 碼，幫它補回 0 並加上橫槓顯示
+        if (/^9\d{8}$/.test(dPhone)) {
+          dPhone = '0' + dPhone;
+          dPhone = dPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+        }
+        return '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+dPhone+'</div></div>';
+      })() : ''}
     </div>` : ''}
     <div class="detail-section">
       <div class="detail-label"style="font-size: 16px;">里民上傳照片</div>
