@@ -1,4 +1,4 @@
-/* ── index-v1.4 ── */
+/* ── index-v1.5 ── */
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -304,7 +304,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="header-icon">🏘️</div>
   <div>
     <div class="header-title">建民里智慧通報</div>
-    <div class="header-sub">新北市中和區建民里</div>
+    <div class="header-sub">台北市士林區建民里</div>
   </div>
 </div>
 
@@ -445,16 +445,27 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 </div>
 
 <!-- ══ PAGE 3：照片 ══ -->
-<div class="page" id="page3">
-  <div class="page-title" style="font-size:28px;">上傳現場照片</div>
-  <div class="page-sub" style="font-size:16px;">請拍攝現場照片，方便里辦判斷處理方式</div>
-
-  <div class="photo-zone" id="photoZone" onclick="document.getElementById('photoInput').click()">
+<div class="photo-zone" id="photoZone" onclick="document.getElementById('photoInput').click()">
     <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)" style="display:none" />
     <div class="photo-icon">📸</div>
     <div class="photo-text">點此拍照或選擇圖片</div>
     <div class="photo-hint">請上傳 1 張清晰的現場照片</div>
   </div>
+  <div class="photo-preview" id="photoPreview">
+    <img id="photoImg" src="" alt="預覽" />
+    <div class="photo-retake" onclick="retakePhoto()">🔄 重新拍攝</div>
+  </div>
+  <!-- 無照片區塊 -->
+  <div id="noPhotoZone" style="display:none; margin-top:12px; padding:18px; background:#F8FAFC; border:2px dashed #CBD5E1; border-radius:14px; text-align:center;">
+    <div style="font-size:32px; margin-bottom:6px;">🚫</div>
+    <div style="font-size:17px; font-weight:700; color:var(--text2);">未提供現場照片</div>
+    <div style="font-size:14px; color:#94A3B8; margin-top:4px; cursor:pointer;" onclick="cancelNoPhoto()">← 取消，我要拍照</div>
+  </div>
+  <!-- 無照片按鈕 -->
+  <button id="btnNoPhoto" onclick="setNoPhoto()"
+    style="width:100%; margin-top:14px; padding:16px; background:white; border:2px solid var(--border); border-radius:14px; font-size:17px; font-weight:600; color:var(--text2); cursor:pointer; font-family:inherit;">
+    📋 此次通報無現場照片
+  </button>
   <div class="photo-preview" id="photoPreview">
     <img id="photoImg" src="" alt="預覽" />
     <div class="photo-retake" onclick="retakePhoto()">🔄 重新拍攝</div>
@@ -549,7 +560,7 @@ const state = {
   subcat: null,
   location: null, locationSource: null,
   gpsLat: null, gpsLng: null, mapUrl: null,
-  photoFile: null, photoBase64: null,
+  photoFile: null, photoBase64: null, noPhoto: false,
   description: null,
   name: null, phone: null,
   userId: null, displayName: null
@@ -781,7 +792,7 @@ function showAddrList(addrs, source) {
   addrs.forEach(a => {
     // 取出純地址字串，去掉縣市前綴讓顯示更簡潔
     let addr = (a.address || a.fullAddress || '').trim();
-    addr = addr.replace(/^新北市中和區/, '中和區');  // 簡化顯示
+    addr = addr.replace(/^台北市士林區/, '士林區');  // 簡化顯示
 
     if (!addr) return;
     const item = document.createElement('div');
@@ -871,6 +882,9 @@ function checkPage2() {
 
 // ══ PAGE 3：照片 ══
 function handlePhoto(e) {
+  state.noPhoto = false;
+  document.getElementById('noPhotoZone').style.display = 'none';
+  document.getElementById('btnNoPhoto').style.display  = 'block';
   const file = e.target.files[0];
   if (!file) return;
   state.photoFile = file;
@@ -891,7 +905,27 @@ function retakePhoto() {
   document.getElementById('btn3').disabled = true;
   document.getElementById('photoInput').value = '';
 }
+// 無照片選項
+function setNoPhoto() {
+  state.photoFile   = null;
+  state.photoBase64 = null;
+  state.noPhoto     = true;
+  document.getElementById('photoZone').style.display    = 'none';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('btnNoPhoto').style.display   = 'none';
+  document.getElementById('noPhotoZone').style.display  = 'block';
+  document.getElementById('btn3').disabled = false;
+}
 
+function cancelNoPhoto() {
+  state.noPhoto = false;
+  document.getElementById('photoZone').style.display    = 'block';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('btnNoPhoto').style.display   = 'block';
+  document.getElementById('noPhotoZone').style.display  = 'none';
+  document.getElementById('btn3').disabled = true;
+}
+  
 // ══ PAGE 4：確認 ══
 function buildConfirm() {
   state.description = document.getElementById('description').value;
@@ -910,7 +944,10 @@ function buildConfirm() {
   `).join('') + `
     <div class="confirm-row">
       <div class="confirm-key">照片</div>
-      <div class="confirm-val"><img class="confirm-photo" src="${state.photoBase64}" /></div>
+     <div class="confirm-val">${state.photoBase64
+      ? `<img class="confirm-photo" src="${state.photoBase64}" />`
+      : `<span style="font-size:16px;color:var(--text2);">未提供照片</span>`
+    }</div>
     </div>
   `;
 }
