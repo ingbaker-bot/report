@@ -1,4 +1,4 @@
-/* ── index-v1.2 ── */
+/* ── index-v1.3 ── */
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -150,7 +150,7 @@ body {
 /* ── INPUTS ── */
 .field { margin-bottom: 18px; }
 .field-label {
-  font-size: 14px; font-weight: 700; color: var(--text2);
+  font-size: 17px; font-weight: 700; color: var(--text2);
   margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
 }
 .req { color: var(--red); }
@@ -173,9 +173,9 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 }
 .photo-zone:active { background: var(--jade-pale); border-color: var(--jade); }
 .photo-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.photo-icon { font-size: 48px; margin-bottom: 12px; }
-.photo-text { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-.photo-hint { font-size: 13px; color: var(--text2); }
+.photo-icon { font-size: 56px; margin-bottom: 12px; }
+.photo-text { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.photo-hint { font-size: 16px; color: var(--text2); }
 .photo-preview { margin-top: 14px; display: none; }
 .photo-preview img { width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; border: 2px solid var(--jade); }
 .photo-retake { margin-top: 8px; font-size: 14px; color: var(--jade); text-align: center; cursor: pointer; font-weight: 600; }
@@ -446,8 +446,8 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 
 <!-- ══ PAGE 3：照片 ══ -->
 <div class="page" id="page3">
-  <div class="page-title">上傳現場照片</div>
-  <div class="page-sub">請拍攝現場照片，方便里辦判斷處理方式</div>
+  <div class="page-title" style="font-size:28px;">上傳現場照片</div>
+  <div class="page-sub" style="font-size:16px;">請拍攝現場照片，方便里辦判斷處理方式</div>
 
   <div class="photo-zone" id="photoZone" onclick="document.getElementById('photoInput').click()">
     <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)" style="display:none" />
@@ -461,8 +461,8 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   </div>
 
   <div class="field" style="margin-top:20px;">
-    <div class="field-label">補充說明（選填）</div>
-    <textarea id="description" placeholder="例：路燈已暗三天，夜間行走不安全..."></textarea>
+    <div class="field-label" style="font-size:18px;">補充說明（選填）</div>
+    <textarea id="description" style="font-size:17px;" placeholder="例：路燈已暗三天，夜間行走不安全..."></textarea>
   </div>
 
   <button class="btn-next" id="btn3" onclick="goTo(4)" disabled>下一步　›</button>
