@@ -1,4 +1,4 @@
-/* ── index-v1.3 ── */
+/* ── index-v1.4 ── */
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -205,8 +205,8 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   border-bottom: 1px solid var(--border); font-size: 15px;
 }
 .confirm-row:last-child { border-bottom: none; }
-.confirm-key { color: var(--text2); width: 80px; flex-shrink: 0; font-size: 14px; }
-.confirm-val { font-weight: 600; flex: 1; }
+.confirm-key { color: var(--text2); width: 80px; flex-shrink: 0; font-size: 17px; }
+.confirm-val { font-size: 20px; font-weight: 700; }
 .confirm-photo { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
 
 /* ── BUTTONS ── */
@@ -214,7 +214,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   width: 100%; padding: 18px;
   background: var(--jade); color: white;
   border: none; border-radius: 14px;
-  font-size: 18px; font-weight: 900;
+  font-size: 20px; font-weight: 900;
   font-family: inherit; cursor: pointer;
   transition: all 0.2s; letter-spacing: 0.03em;
   margin-top: 8px;
@@ -304,7 +304,7 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="header-icon">🏘️</div>
   <div>
     <div class="header-title">建民里智慧通報</div>
-    <div class="header-sub">台北市士林區建民里</div>
+    <div class="header-sub">新北市中和區建民里</div>
   </div>
 </div>
 
@@ -471,15 +471,15 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 
 <!-- ══ PAGE 4：確認送出 ══ -->
 <div class="page" id="page4">
-  <div class="page-title">確認通報內容</div>
-  <div class="page-sub">請確認後送出，里辦將儘速處理</div>
+  <div class="page-title" style="font-size:28px;">確認通報內容</div>
+  <div class="page-sub" style="font-size:16px;">請確認後送出，里辦將儘速處理</div>
 
   <div class="confirm-card" id="confirmCard"></div>
 
   <div class="optional-toggle" onclick="toggleContact()">
     <div>
-      <div style="font-size:16px; font-weight:700;">留下聯絡方式（選填）</div>
-      <div style="font-size:13px; color:var(--text2); margin-top:2px;">方便里辦回覆或確認細節</div>
+      <div style="font-size:18px; font-weight:700;">留下聯絡方式（選填）</div>
+      <div style="font-size:16px; color:var(--text2); margin-top:2px;">方便里辦回覆或確認細節</div>
     </div>
     <div class="toggle-sw" id="contactToggle"><div class="toggle-knob"></div></div>
   </div>
@@ -781,7 +781,7 @@ function showAddrList(addrs, source) {
   addrs.forEach(a => {
     // 取出純地址字串，去掉縣市前綴讓顯示更簡潔
     let addr = (a.address || a.fullAddress || '').trim();
-    addr = addr.replace(/^台北市士林區/, '士林區');  // 簡化顯示
+    addr = addr.replace(/^新北市中和區/, '中和區');  // 簡化顯示
 
     if (!addr) return;
     const item = document.createElement('div');
