@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建民里管理後台v1.6</title>
+<title>建民里管理後台v1.7</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -311,16 +311,16 @@ function buildPanelHTML(r) {
       ${r.phone ? '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+r.phone+'</div></div>' : ''}
     </div>` : ''}
     <div class="detail-section">
-      <div class="detail-label">里民上傳照片</div>
+      <div class="detail-label"style="font-size: 16px;">里民上傳照片</div>
       ${r.photoUrl
-        ? `<a class="photo-link" href="${r.photoUrl}" target="_blank">🖼️ 點此查看里民照片</a>`
+        ? `<a class="photo-link" href="${r.photoUrl}" target="_blank" style="font-size: 14px;">🖼️ 點此查看里民照片</a>`
         : `<div style="font-size:14px;color:#94A3B8;padding:8px 0;">📋 里民未提供現場照片</div>`
       }
     </div>
 
     <div class="divider"></div>
 
-    <span class="field-label">更新狀態</span>
+    <span class="field-label" style="font-size: 20px;">更新狀態</span>
     <div class="status-btns">
       <button class="status-btn sBtn-pending ${r.status==='待處理'?'active':''}" data-status="待處理" onclick="selectStatus('待處理',this)">⏳ 待處理</button>
       <button class="status-btn sBtn-process ${r.status==='處理中'?'active':''}" data-status="處理中" onclick="selectStatus('處理中',this)">🔧 處理中</button>
@@ -328,13 +328,13 @@ function buildPanelHTML(r) {
     </div>
 
     <div class="complete-photo-zone ${r.status==='已完成'?'show':''}" id="completePhotoZone">
-      <span class="field-label">上傳處理完成照片（選填）</span>
+      <span class="field-label" style="font-size: 20px;">上傳處理完成照片（選填）</span>
       <div class="photo-upload-box" id="uploadBox" onclick="document.getElementById('completeInput').click()">
         <input type="file" id="completeInput" accept="image/*" capture="environment"
           style="display:none" onchange="handleCompletePhoto(event)" />
         <div style="font-size:28px;margin-bottom:6px">📸</div>
-        <div style="font-size:14px;font-weight:700">點此拍攝處理後照片</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">上傳後將連結傳送給里民</div>
+        <div style="font-size:18px;font-weight:700">點此拍攝處理後照片</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">上傳後將連結傳送給里民</div>
       </div>
       <div class="complete-preview" id="completePreview">
         <img id="completeImg" src="" />
@@ -343,7 +343,7 @@ function buildPanelHTML(r) {
     </div>
 
     <div class="detail-section">
-      <span class="field-label" style="font-size: 18px;">里長備註</span>
+      <span class="field-label" style="font-size: 20px;">里長備註</span>
       <textarea id="noteInput" style="font-size: 17px; height: 120px;" placeholder="輸入處理說明，例如：已通報水利局，預計週五處理...">${r.note||''}</textarea>
     </div>
     <button class="btn-save" id="btnSave" onclick="saveReport()">💾 儲存並通知里民</button>
