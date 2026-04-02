@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建民里管理後台</title>
+<title>建民里管理後台v1.5</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -309,8 +309,13 @@ function buildPanelHTML(r) {
       ${r.name  ? '<div class="detail-cell"><div class="detail-label">姓名</div><div class="detail-val">'+r.name+'</div></div>' : ''}
       ${r.phone ? '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+r.phone+'</div></div>' : ''}
     </div>` : ''}
-    ${r.photoUrl ? `<div class="detail-section"><div class="detail-label">里民上傳照片</div>
-      <a class="photo-link" href="${r.photoUrl}" target="_blank">🖼️ 點此查看里民照片</a></div>` : ''}
+    <div class="detail-section">
+      <div class="detail-label">里民上傳照片</div>
+      ${r.photoUrl
+        ? `<a class="photo-link" href="${r.photoUrl}" target="_blank">🖼️ 點此查看里民照片</a>`
+        : `<div style="font-size:14px;color:#94A3B8;padding:8px 0;">📋 里民未提供現場照片</div>`
+      }
+    </div>
 
     <div class="divider"></div>
 
