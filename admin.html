@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里管理後台v1.5</title>
+<title>民有里管理後台v1.8</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -12,7 +12,7 @@
   --ink: #0f1f1a; --mist: #f2f7f5; --border: #d4e8df; --text2: #5a7068;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: var(--ink); }
+body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: var(--ink); font-size: 16px; }
 
 .header {
   background: var(--jade); color: white; padding: 14px 18px;
@@ -20,8 +20,8 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
   position: sticky; top: 0; z-index: 50;
 }
 .header-left { display: flex; align-items: center; gap: 10px; }
-.header-title { font-size: 17px; font-weight: 900; }
-.header-sub { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+.header-title { font-size: 18px; font-weight: 900; }
+.header-sub { font-size: 12px; opacity: 0.75; margin-top: 1px; }
 .btn-refresh {
   background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
   color: white; padding: 7px 12px; border-radius: 20px; font-size: 13px; font-family: inherit; cursor: pointer;
@@ -32,8 +32,9 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
-  padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text2);
-  cursor: pointer; white-space: nowrap; border-bottom: 2.5px solid transparent;
+  padding: 12px 16px; font-size: 16px; font-weight: 600; color: var(--text2);
+  cursor: pointer; white-space: nowrap;
+  border-bottom: 2.5px solid transparent;
   background: none; border-top: none; border-left: none; border-right: none;
   font-family: inherit; display: flex; align-items: center; gap: 6px;
 }
@@ -52,13 +53,13 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 }
 .card-top { padding: 14px 16px 10px; }
 .card-row1 { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
-.card-title { font-size: 15px; font-weight: 700; }
+.card-title { font-size: 18px; font-weight: 700; }
 .status-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; margin-left: 8px; }
 .badge-pending { background: #fee2e2; color: #991b1b; }
 .badge-process { background: #dbeafe; color: #1e40af; }
 .badge-done    { background: var(--jade-pale); color: var(--jade); }
-.card-meta { font-size: 12px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 8px; }
-.card-desc { font-size: 12px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+.card-meta { font-size: 15px; color: var(--text2); display: flex; flex-wrap: wrap; gap: 8px; }
+.card-desc { font-size: 15px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
 .card-id { font-family: 'DM Mono', monospace; font-size: 10px; color: #94a3b8; margin-top: 4px; }
 
 .panel-overlay {
@@ -78,15 +79,15 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
   padding: 14px 18px 12px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
-.panel-title { font-size: 16px; font-weight: 900; }
+.panel-title { font-size: 20px; font-weight: 900; }
 .btn-close-panel {
   width: 30px; height: 30px; border-radius: 50%; background: var(--mist);
   border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 .panel-body { padding: 16px 18px 36px; }
 
-.detail-label { font-size: 11px; font-weight: 700; color: var(--text2); letter-spacing: 0.06em; margin-bottom: 6px; }
-.detail-val { font-size: 15px; font-weight: 600; }
+.detail-label { font-size: 14px; font-weight: 700; color: var(--text2); letter-spacing: 0.06em; margin-bottom: 6px; }
+.detail-val { font-size: 18px; font-weight: 600; }
 .detail-val.mono { font-family: 'DM Mono', monospace; font-size: 13px; color: #7c3aed; }
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
 .detail-cell { background: var(--mist); border-radius: 10px; padding: 10px 12px; }
@@ -99,10 +100,10 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 }
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 
-.field-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 7px; display: block; }
+.field-label { font-size: 17px; font-weight: 700; color: var(--text2); margin-bottom: 7px; display: block; }
 .status-btns { display: flex; gap: 8px; margin-bottom: 14px; }
 .status-btn {
-  flex: 1; padding: 12px 8px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  flex: 1; padding: 12px 8px; border-radius: 10px; font-size: 16px; font-weight: 700;
   font-family: inherit; cursor: pointer; border: 2px solid transparent; text-align: center;
 }
 .sBtn-pending { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
@@ -112,7 +113,7 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 
 textarea {
   width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
-  font-size: 15px; font-family: inherit; resize: none; height: 90px; line-height: 1.6;
+  font-size: 17px; font-family: inherit; resize: none; height: 110px; line-height: 1.6;
   outline: none; color: var(--ink); background: white;
 }
 textarea:focus { border-color: var(--jade); }
@@ -130,7 +131,7 @@ textarea:focus { border-color: var(--jade); }
 
 .btn-save {
   width: 100%; padding: 16px; background: var(--jade); color: white;
-  border: none; border-radius: 14px; font-size: 17px; font-weight: 900;
+  border: none; border-radius: 14px; font-size: 20px; font-weight: 900;
   font-family: inherit; cursor: pointer; margin-top: 10px;
 }
 .btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
@@ -307,19 +308,28 @@ function buildPanelHTML(r) {
     ${r.description ? `<div class="detail-section"><div class="detail-label">描述</div><div class="detail-val" style="font-weight:400;font-size:14px;line-height:1.7">${r.description}</div></div>` : ''}
     ${(r.name||r.phone) ? `<div class="detail-grid">
       ${r.name  ? '<div class="detail-cell"><div class="detail-label">姓名</div><div class="detail-val">'+r.name+'</div></div>' : ''}
-      ${r.phone ? '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+r.phone+'</div></div>' : ''}
+      ${r.phone ?
+      (() => {
+        let dPhone = r.phone.toString();
+        // 【新增】如果舊資料是 9 開頭且只有 9 碼，幫它補回 0 並加上橫槓顯示
+        if (/^9\d{8}$/.test(dPhone)) {
+          dPhone = '0' + dPhone;
+          dPhone = dPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+        }
+        return '<div class="detail-cell"><div class="detail-label">電話</div><div class="detail-val">'+dPhone+'</div></div>';
+      })() : ''}
     </div>` : ''}
     <div class="detail-section">
-      <div class="detail-label">里民上傳照片</div>
+      <div class="detail-label"style="font-size: 16px;">里民上傳照片</div>
       ${r.photoUrl
-        ? `<a class="photo-link" href="${r.photoUrl}" target="_blank">🖼️ 點此查看里民照片</a>`
+        ? `<a class="photo-link" href="${r.photoUrl}" target="_blank" style="font-size: 14px;">🖼️ 點此查看里民照片</a>`
         : `<div style="font-size:14px;color:#94A3B8;padding:8px 0;">📋 里民未提供現場照片</div>`
       }
     </div>
 
     <div class="divider"></div>
 
-    <span class="field-label">更新狀態</span>
+    <span class="field-label" style="font-size: 20px;">更新狀態</span>
     <div class="status-btns">
       <button class="status-btn sBtn-pending ${r.status==='待處理'?'active':''}" data-status="待處理" onclick="selectStatus('待處理',this)">⏳ 待處理</button>
       <button class="status-btn sBtn-process ${r.status==='處理中'?'active':''}" data-status="處理中" onclick="selectStatus('處理中',this)">🔧 處理中</button>
@@ -327,13 +337,13 @@ function buildPanelHTML(r) {
     </div>
 
     <div class="complete-photo-zone ${r.status==='已完成'?'show':''}" id="completePhotoZone">
-      <span class="field-label">上傳處理完成照片（選填）</span>
+      <span class="field-label" style="font-size: 20px;">上傳處理完成照片（選填）</span>
       <div class="photo-upload-box" id="uploadBox" onclick="document.getElementById('completeInput').click()">
         <input type="file" id="completeInput" accept="image/*" capture="environment"
           style="display:none" onchange="handleCompletePhoto(event)" />
         <div style="font-size:28px;margin-bottom:6px">📸</div>
-        <div style="font-size:14px;font-weight:700">點此拍攝處理後照片</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">上傳後將連結傳送給里民</div>
+        <div style="font-size:18px;font-weight:700">點此拍攝處理後照片</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">上傳後將連結傳送給里民</div>
       </div>
       <div class="complete-preview" id="completePreview">
         <img id="completeImg" src="" />
@@ -342,10 +352,9 @@ function buildPanelHTML(r) {
     </div>
 
     <div class="detail-section">
-      <span class="field-label">里長備註</span>
-      <textarea id="noteInput" placeholder="輸入處理說明，例如：已通報水利局，預計週五處理...">${r.note||''}</textarea>
+      <span class="field-label" style="font-size: 20px;">里長備註</span>
+      <textarea id="noteInput" style="font-size: 17px; height: 120px;" placeholder="輸入處理說明，例如：已通報水利局，預計週五處理...">${r.note||''}</textarea>
     </div>
-
     <button class="btn-save" id="btnSave" onclick="saveReport()">💾 儲存並通知里民</button>
   `;
 }
