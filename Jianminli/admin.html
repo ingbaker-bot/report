@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>建民里管理後台v1.5</title>
+<title>建民里管理後台v1.6</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -99,7 +99,7 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 }
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 
-.field-label { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 7px; display: block; }
+.field-label { font-size: 17px; font-weight: 700; color: var(--text2); margin-bottom: 7px; display: block; }
 .status-btns { display: flex; gap: 8px; margin-bottom: 14px; }
 .status-btn {
   flex: 1; padding: 12px 8px; border-radius: 10px; font-size: 13px; font-weight: 700;
@@ -111,8 +111,9 @@ body { font-family: 'Noto Sans TC', sans-serif; background: var(--mist); color: 
 .status-btn.active { transform: scale(1.03); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
 
 textarea {
-  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
-  font-size: 15px; font-family: inherit; resize: none; height: 90px; line-height: 1.6;
+  width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px;
+  font-size: 17px; font-family: inherit; resize: none;
+  height: 110px; line-height: 1.6;
   outline: none; color: var(--ink); background: white;
 }
 textarea:focus { border-color: var(--jade); }
@@ -342,10 +343,9 @@ function buildPanelHTML(r) {
     </div>
 
     <div class="detail-section">
-      <span class="field-label">里長備註</span>
-      <textarea id="noteInput" placeholder="輸入處理說明，例如：已通報水利局，預計週五處理...">${r.note||''}</textarea>
+      <span class="field-label" style="font-size: 18px;">里長備註</span>
+      <textarea id="noteInput" style="font-size: 17px; height: 120px;" placeholder="輸入處理說明，例如：已通報水利局，預計週五處理...">${r.note||''}</textarea>
     </div>
-
     <button class="btn-save" id="btnSave" onclick="saveReport()">💾 儲存並通知里民</button>
   `;
 }
