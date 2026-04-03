@@ -330,42 +330,27 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   </div>
 </div>
 
-<!-- ══ PAGE 1：類別 ══ -->
 <div class="page active" id="page1">
   <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:24px;">
     <div class="page-title" style="font-size:28px;margin-bottom:0;">選擇通報類別</div>
     <div class="page-sub" style="margin-bottom:0;white-space:nowrap;">請選擇最符合的項目</div>
   </div>
 
-<div class="cat-card" onclick="selectCat(this,'env')">
-      <div class="cat-header">
-        <span class="cat-icon">🌿</span>
-        <div class="cat-name">環境類</div>
-      </div>
+  <div class="cat-grid">
+    <div class="cat-card" onclick="selectCat(this,'env')">
+      <div class="cat-header"><span class="cat-icon">🌿</span><div class="cat-name">環境類</div></div>
       <div class="cat-desc">路燈、水溝、垃圾、道路</div>
     </div>
-    
-    <div class="cat-card" onclick="selectCat(this,'safety')"> 
-      <div class="cat-header">
-        <span class="cat-icon">🛡️</span>
-        <div class="cat-name">安全類</div>
-      </div>
+    <div class="cat-card" onclick="selectCat(this,'safety')">
+      <div class="cat-header"><span class="cat-icon">🛡️</span><div class="cat-name">安全類</div></div>
       <div class="cat-desc">違規停車、監視器、可疑人士</div>
     </div>
-    
     <div class="cat-card" onclick="selectCat(this,'care')">
-      <div class="cat-header">
-        <span class="cat-icon">💛</span>
-        <div class="cat-name">關懷類</div>
-      </div>
+      <div class="cat-header"><span class="cat-icon">💛</span><div class="cat-name">關懷類</div></div>
       <div class="cat-desc">獨居長者、流浪動物</div>
     </div>
-    
     <div class="cat-card" onclick="selectCat(this,'suggest')">
-      <div class="cat-header">
-        <span class="cat-icon">💡</span>
-        <div class="cat-name">建議類</div>
-      </div>
+      <div class="cat-header"><span class="cat-icon">💡</span><div class="cat-name">建議類</div></div>
       <div class="cat-desc">里政提案、活動規劃</div>
     </div>
   </div>
@@ -447,31 +432,32 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 </div>
 
 <!-- ══ PAGE 3：照片 ══ -->
-<div class="photo-zone" id="photoZone" onclick="document.getElementById('photoInput').click()">
+<div class="page" id="page3">
+  <div class="page-title">現場照片</div>
+  <div class="page-sub">上傳或拍攝現場狀況，幫助里辦快速了解</div>
+
+  <div class="photo-zone" id="photoZone" onclick="document.getElementById('photoInput').click()">
     <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)" style="display:none" />
     <div class="photo-icon">📸</div>
     <div class="photo-text">點此拍照或選擇圖片</div>
     <div class="photo-hint">請上傳 1 張清晰的現場照片</div>
   </div>
+  
   <div class="photo-preview" id="photoPreview">
     <img id="photoImg" src="" alt="預覽" />
     <div class="photo-retake" onclick="retakePhoto()">🔄 重新拍攝</div>
   </div>
-  <!-- 無照片區塊 -->
+
   <div id="noPhotoZone" style="display:none; margin-top:12px; padding:18px; background:#F8FAFC; border:2px dashed #CBD5E1; border-radius:14px; text-align:center;">
     <div style="font-size:32px; margin-bottom:6px;">🚫</div>
     <div style="font-size:17px; font-weight:700; color:var(--text2);">未提供現場照片</div>
     <div style="font-size:14px; color:#94A3B8; margin-top:4px; cursor:pointer;" onclick="cancelNoPhoto()">← 取消，我要拍照</div>
   </div>
-  <!-- 無照片按鈕 -->
+  
   <button id="btnNoPhoto" onclick="setNoPhoto()"
     style="width:100%; margin-top:14px; padding:16px; background:white; border:2px solid var(--border); border-radius:14px; font-size:17px; font-weight:600; color:var(--text2); cursor:pointer; font-family:inherit;">
     📋 此次通報無現場照片
   </button>
-  <div class="photo-preview" id="photoPreview">
-    <img id="photoImg" src="" alt="預覽" />
-    <div class="photo-retake" onclick="retakePhoto()">🔄 重新拍攝</div>
-  </div>
 
   <div class="field" style="margin-top:20px;">
     <div class="field-label" style="font-size:18px;">補充說明（選填）</div>
