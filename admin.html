@@ -202,46 +202,75 @@ textarea:focus { border-color: var(--jade); }
 
 <div class="toast" id="toast"></div>
 
-<script>
-const ADMIN_LIFF_ID = '2009667380-qs3zovvv';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxq_i33h0ztCWMBmvFZMiKiISZjzACDyHAF7crcDSMeY6lU3__5-g99BFLaps4o3hM/exec';
+<script src="config.js"></script>
 
-// 【新增】在這裡填入里長的 Line UserID (可以設定多個)
-const ADMIN_UIDS = ['U56dab987a29938f8e4a5c07e025bffe5','U111dd208a2fc591089e770f3b960cec9','Ucc99fd9571fb5fb8b0c8eb608fe57063']; 
-  
+<script>
+// ══════════════════════════════
+// 1. 動態設定與權限載入區
+// ══════════════════════════════
+const urlParams = new URLSearchParams(window.location.search);
+let vid = urlParams.get('vid');
+
+// 處理 LINE LIFF 的 liff.state 封裝問題
+if (!vid) {
+  const liffState = urlParams.get('liff.state');
+  if (liffState) {
+    const stateParams = new URLSearchParams(liffState.startsWith('?') ? liffState : '?' + liffState);
+    vid = stateParams.get('vid');
+  }
+}
+
+// 錯誤阻擋
+if (!vid || !SYSTEM_CONFIG[vid]) {
+  document.body.innerHTML = `
+    <div style="text-align:center; padding:50px; font-size:18px; height: 100vh; background: var(--mist);">
+      <div style="font-size:50px; margin-bottom:16px;">🛑</div>
+      <div style="font-size:22px; font-weight:900; color:var(--red); margin-bottom:12px;">無效的後台連結</div>
+      <div style="color:var(--text2);">請確認網址是否包含正確的里辦公室代碼</div>
+    </div>`;
+  throw new Error('Invalid Admin Village ID');
+}
+
+const VILLAGE = SYSTEM_CONFIG[vid];
+
+// 動態替換畫面標題
+document.title = `${VILLAGE.villageName}管理後台`;
+document.querySelector('.header-title').textContent = `${VILLAGE.villageName}管理後台`;
+
+// ══════════════════════════════
+// 2. 狀態變數
+// ══════════════════════════════
 let allReports = [], currentTab = 'pending', currentReport = null;
 let selectedStatus = null, completePhotoBase64 = null;
 
 async function initLiff() {
   try {
-    await liff.init({ liffId: ADMIN_LIFF_ID });
-
-    // 1. 尚未登入則要求登入
+    // 【動態化】使用設定檔中的後台 LIFF ID
+    await liff.init({ liffId: VILLAGE.liffIdAdmin });
+    
     if (!liff.isLoggedIn()) {
       liff.login();
       return;
     }
 
-    // 2. 取得使用者資訊
     const profile = await liff.getProfile();
     const userId = profile.userId;
 
-    // 3. 驗證身分是否為里長
-    if (ADMIN_UIDS.includes(userId)) {
-      // 是里長，正常載入資料
-      loadReports();
+    // 【動態權限驗證】檢查登入者的 UID 是否在該里的管理員名單中
+    if (VILLAGE.adminUids.includes(userId)) {
+      loadReports(); // 權限符合，載入資料
     } else {
-      // 不是里長，直接清空畫面並顯示阻擋訊息
+      // 權限不符，顯示阻擋畫面並顯示他的 UID (方便你後續幫里長開權限)
       document.body.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px; background:var(--mist);">
           <div style="font-size:64px; margin-bottom:16px;">🛑</div>
           <div style="font-size:24px; font-weight:900; color:var(--jade); margin-bottom:12px;">權限不足</div>
-          <div style="font-size:16px; color:var(--text2); line-height:1.6; margin-bottom:24px;">這是里長專屬的回覆後台<br>一般里民無法進入喔！</div>
+          <div style="font-size:16px; color:var(--text2); line-height:1.6; margin-bottom:24px;">這是 ${VILLAGE.villageName} 的專屬回覆後台<br>您的帳號尚未被授權。</div>
+          <div style="font-size:11px; color:#94a3b8; margin-bottom:24px; font-family:monospace;">您的 UID: ${userId}</div>
           <button onclick="liff.closeWindow()" style="padding:14px 32px; background:var(--jade); color:white; border:none; border-radius:12px; font-size:18px; font-weight:700;">關閉視窗</button>
         </div>
       `;
     }
-
   } catch(e) {
     console.log('LIFF init error:', e);
   }
@@ -251,8 +280,8 @@ async function loadReports() {
   document.getElementById('listWrap').innerHTML =
     '<div class="loading-wrap"><div class="spinner"></div>載入通報資料中...</div>';
   try {
-    // 直接用 fetch GET，GAS ContentService 允許跨域 GET 請求
-    const res  = await fetch(GAS_URL + '?action=getReports', {
+   
+  const res  = await fetch(VILLAGE.gasUrl + '?action=getReports', {
       method: 'GET',
       redirect: 'follow'
     });
@@ -441,7 +470,7 @@ async function saveReport() {
       note: note,
       completePhotoBase64: completePhotoBase64 || null
     }));
-    await fetch(GAS_URL, {
+    await fetch(VILLAGE.gasUrl, {
       method: 'POST',
       mode: 'no-cors',
       body: _params
