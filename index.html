@@ -564,8 +564,16 @@ const VILLAGE = SYSTEM_CONFIG[vid];
 
 // 4. 動態替換畫面上的文字 (包含里長姓名)
 document.title = `${VILLAGE.villageName}智慧通報`;
-document.querySelector('.header-title').textContent = `${VILLAGE.villageName}智慧通報`;
-document.querySelector('.header-sub').textContent = `${VILLAGE.city}${VILLAGE.district}${VILLAGE.villageName} ${VILLAGE.chiefName ? ' | ' + VILLAGE.chiefName + ' 里長' : ''}`;
+
+// 找到 Header 右側的文字容器 (原本包著 header-title 和 header-sub 的那個 div)
+const headerTextContainer = document.querySelector('.header > div:nth-child(2)');
+
+// 動態重寫裡面的 HTML 結構，把里長姓名特別獨立出來
+headerTextContainer.innerHTML = `
+  <div class="header-title">${VILLAGE.villageName}智慧通報</div>
+  <div class="header-sub">${VILLAGE.city}${VILLAGE.district}${VILLAGE.villageName}</div>
+  ${VILLAGE.chiefName ? `<div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px; background: rgba(0,0,0,0.15); display: inline-block; padding: 2px 8px; border-radius: 10px;">👤 ${VILLAGE.chiefName} 里長 關心您</div>` : ''}
+`;
 
 // ══ 狀態 ══
 const state = {
