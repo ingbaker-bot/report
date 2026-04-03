@@ -11,7 +11,7 @@ const SYSTEM_CONFIG = {
     chiefName: '王大明',           // 預留：可隨時修改里長姓名
     reportPrefix: 'MIY',          // 通報編號前綴 (例: MIY-2026-1234)
     liffIdIndex: '2009643244-BgwBKoP8',
-    liffIdAdmin: '2009667380-qs3zovvv',
+    liffIdAdmin: '2009643244-9i0hXQpm',
     gasUrl: 'https://script.google.com/macros/s/AKfycbzLLT6Kik_VTS6o1n3rnuWGe0quPBah0_Gb3j_Jzi6DtXI9TW6tCGDvorjlqGMF6bnu/exec',
     adminUids: ['U56dab987a29938f8e4a5c07e025bffe5','U111dd208a2fc591089e770f3b960cec9','Ucc99fd9571fb5fb8b0c8eb608fe57063']
   },
@@ -23,8 +23,8 @@ const SYSTEM_CONFIG = {
     district: '士林區',
     chiefName: '簡妤年',           
     reportPrefix: 'JIA',
-    liffIdIndex: 'YOUR_JIANMIN_LIFF_ID', // 請替換為建民里真實 LIFF ID
-    liffIdAdmin: 'YOUR_JIANMIN_ADMIN_LIFF_ID',
+    liffIdIndex: '2009667380-LQ3kTHBw', // 請替換為建民里真實 LIFF ID
+    liffIdAdmin: '2009667380-qs3zovvv',
     gasUrl: 'https://script.google.com/macros/s/YOUR_JIANMIN_GAS_URL/exec',
     adminUids: ['U_JIANMIN_ADMIN_UID_HERE']
   }
