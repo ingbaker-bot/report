@@ -658,8 +658,16 @@ function goTo(step) {
     document.getElementById('page'+step).classList.add('active');
     updateIndicator(step);
   }
-  window.scrollTo(0, 0);
+  
+  // 先組合第 4 頁的內容，確保畫面高度已經長出來
   if (step === 4) buildConfirm();
+
+  // 【修正】延遲 50 毫秒執行捲動，並加入雙重相容性語法
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;            // 針對 iOS Safari 支援
+    document.documentElement.scrollTop = 0; // 針對 Chrome 等其他瀏覽器支援
+  }, 50);
 }
 
 // ══ PAGE 1：類別 ══
