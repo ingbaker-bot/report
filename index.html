@@ -734,7 +734,7 @@ function queryNearbyFromGAS(lat, lng) {
   return new Promise((resolve) => {
     const cb   = 'nearby_' + Date.now();
     const s    = document.createElement('script');
-    const url  = CONFIG.GAS_URL
+    const url  = VILLAGE.gasUrl
                + '?action=nearby'
                + '&lat=' + lat
                + '&lng=' + lng
@@ -1042,18 +1042,16 @@ async function submitReport() {
     photoBase64: state.photoBase64
   };
 
-  try {
-    if (CONFIG.GAS_URL && CONFIG.GAS_URL !== 'YOUR_GAS_WEBHOOK_URL') {
-
-
-      const params = new URLSearchParams();
-      params.append('data', JSON.stringify(payload));
-      await fetch(VILLAGE.gasUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: params
-      });
-    }
+try {
+    const params = new URLSearchParams();
+    params.append('data', JSON.stringify(payload));
+    
+    // 【修正】直接使用 VILLAGE.gasUrl 發送，移除舊的 CONFIG 判斷
+    await fetch(VILLAGE.gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: params
+    });
   } catch(e) {
     console.log('GAS error:', e);
   }
