@@ -543,18 +543,33 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 </div>
 
 <script>
+<script src="config.js"></script>
+
+<script>
 // ══════════════════════════════
-// 設定區（部署後填入）
+// 動態設定載入區
 // ══════════════════════════════
-const CONFIG = {
-  LIFF_ID: '2009643244-BgwBKoP8',       // ← 你的 LIFF ID
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbzLLT6Kik_VTS6o1n3rnuWGe0quPBah0_Gb3j_Jzi6DtXI9TW6tCGDvorjlqGMF6bnu/exec',       // ← 部署 GAS 後填入
-  NLSC_API: 'https://api.nlsc.gov.tw/other/TownVillagePointQuery',
-  GMAPS_KEY: 'AIzaSyBFoTy6ZmmVCjNYHIvUEl0I8n2VZKkm1RA'  // ← 申請後填入
-};
+// 1. 從網址取得 ?vid= 參數 (例如 ?vid=minyou)
+const urlParams = new URLSearchParams(window.location.search);
+const vid = urlParams.get('vid');
+
+// 2. 如果沒有 vid 或找不到對應的里，顯示錯誤並阻擋
+if (!vid || !SYSTEM_CONFIG[vid]) {
+  document.body.innerHTML = '<div style="text-align:center; padding:50px; font-size:20px;">⚠️ 無效的里辦公室連結，請從官方帳號重新進入。</div>';
+  throw new Error('Invalid Village ID');
+}
+
+// 3. 載入該里的專屬設定
+const VILLAGE = SYSTEM_CONFIG[vid];
+
+// 4. 動態替換畫面上的文字 (包含里長姓名)
+document.title = `${VILLAGE.villageName}智慧通報`;
+document.querySelector('.header-title').textContent = `${VILLAGE.villageName}智慧通報`;
+document.querySelector('.header-sub').textContent = `${VILLAGE.city}${VILLAGE.district}${VILLAGE.villageName} ${VILLAGE.chiefName ? ' | ' + VILLAGE.chiefName + ' 里長' : ''}`;
 
 // ══ 狀態 ══
 const state = {
+  vid: vid, // 【新增】把 vid 存入狀態，準備傳給後端
   cat: null, catName: null,
   subcat: null,
   location: null, locationSource: null,
@@ -565,6 +580,7 @@ const state = {
   userId: null, displayName: null
 };
 
+// ══ 全系統共用副分類與名稱對應 ══
 const subcatMap = {
   env:     ['路燈故障','水溝阻塞','垃圾棄置','道路破損','其他環境問題'],
   safety:  ['違規停車','監視器受損','可疑人士','路障損壞','其他安全問題'],
@@ -576,7 +592,8 @@ const catNameMap = { env:'環境類', safety:'安全類', care:'關懷類', sugg
 // ══ LIFF 初始化 ══
 async function initLiff() {
   try {
-    await liff.init({ liffId: CONFIG.LIFF_ID });
+    // 【動態化】改用 VILLAGE.liffIdIndex
+    await liff.init({ liffId: VILLAGE.liffIdIndex });
     if (liff.isLoggedIn()) {
       const profile = await liff.getProfile();
       state.userId = profile.userId;
@@ -586,7 +603,6 @@ async function initLiff() {
     }
   } catch (e) {
     console.log('LIFF init:', e);
-    // 開發模式下繼續執行
   }
 }
 
@@ -791,7 +807,9 @@ function showAddrList(addrs, source) {
   addrs.forEach(a => {
     // 取出純地址字串，去掉縣市前綴讓顯示更簡潔
     let addr = (a.address || a.fullAddress || '').trim();
-    addr = addr.replace(/^新北市中和區/, '中和區');  // 簡化顯示
+    // 【動態化】使用設定檔裡的 city 與 district
+    const prefixRegex = new RegExp(`^${VILLAGE.city}${VILLAGE.district}`);
+    addr = addr.replace(prefixRegex, VILLAGE.district);
 
     if (!addr) return;
     const item = document.createElement('div');
@@ -973,9 +991,10 @@ async function submitReport() {
 
   showLoading('送出通報中...');
 
-  const reportId = 'MIY-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
-
+  // 【動態化】使用設定檔裡的 Prefix
+  const reportId = `${VILLAGE.reportPrefix}-` + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
   const payload = {
+    vid: state.vid, // 【極重要】告訴後端這是哪個里的通報！
     reportId,
     timestamp: new Date().toISOString(),
     userId: state.userId || 'unknown',
@@ -997,7 +1016,7 @@ async function submitReport() {
 
       const params = new URLSearchParams();
       params.append('data', JSON.stringify(payload));
-      await fetch(CONFIG.GAS_URL, {
+      await fetch(VILLAGE.gasUrl, {
         method: 'POST',
         mode: 'no-cors',
         body: params
