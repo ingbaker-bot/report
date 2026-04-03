@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里智慧通報v2.3</title>
+<title>民有里智慧通報v2.4</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -337,33 +337,36 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
     <div class="page-sub" style="margin-bottom:0;white-space:nowrap;">請選擇最符合的項目</div>
   </div>
 
-    <div class="cat-card" onclick="selectCat(this,'env')">
+<div class="cat-card" onclick="selectCat(this,'env')">
       <div class="cat-header">
         <span class="cat-icon">🌿</span>
         <div class="cat-name">環境類</div>
       </div>
       <div class="cat-desc">路燈、水溝、垃圾、道路</div>
     </div>
-    <div class="cat-card" onclick="selectCat(this,'env')">
-    <div class="cat-header">
-      <span class="cat-icon">🛡️</span>
-      <div class="cat-name">安全類</div>
+    
+    <div class="cat-card" onclick="selectCat(this,'safety')"> 
+      <div class="cat-header">
+        <span class="cat-icon">🛡️</span>
+        <div class="cat-name">安全類</div>
+      </div>
+      <div class="cat-desc">違規停車、監視器、可疑人士</div>
     </div>
-    <div class="cat-desc">違規停車、監視器、可疑人士</div>
-  </div>
-    <div class="cat-card" onclick="selectCat(this,'env')">
+    
+    <div class="cat-card" onclick="selectCat(this,'care')">
       <div class="cat-header">
         <span class="cat-icon">💛</span>
         <div class="cat-name">關懷類</div>
       </div>
       <div class="cat-desc">獨居長者、流浪動物</div>
     </div>
-    <div class="cat-card" onclick="selectCat(this,'env')">
+    
+    <div class="cat-card" onclick="selectCat(this,'suggest')">
       <div class="cat-header">
         <span class="cat-icon">💡</span>
         <div class="cat-name">建議類</div>
       </div>
-      <div class="cat-desc">>里政提案、活動規劃</div>
+      <div class="cat-desc">里政提案、活動規劃</div>
     </div>
   </div>
 
@@ -542,7 +545,6 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="loading-text" id="loadingText">定位中...</div>
 </div>
 
-<script>
 <script src="config.js"></script>
 
 <script>
