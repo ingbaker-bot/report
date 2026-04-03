@@ -548,16 +548,38 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 <script src="config.js"></script>
 
 <script>
-// ══════════════════════════════
 // 動態設定載入區
 // ══════════════════════════════
-// 1. 從網址取得 ?vid= 參數 (例如 ?vid=minyou)
+// 1. 從網址取得參數 (處理 LINE LIFF 的特殊 liff.state 封裝問題) (例如 ?vid=minyou)
 const urlParams = new URLSearchParams(window.location.search);
-const vid = urlParams.get('vid');
+let vid = urlParams.get('vid');
 
-// 2. 如果沒有 vid 或找不到對應的里，顯示錯誤並阻擋
+// 【新增】如果最外層抓不到 vid，嘗試從 LINE 專屬的 liff.state 中解析包裹
+if (!vid) {
+  const liffState = urlParams.get('liff.state');
+  if (liffState) {
+    // 解析 liff.state 裡面的字串 (例如 "?vid=minyou")
+    const stateParams = new URLSearchParams(liffState.startsWith('?') ? liffState : '?' + liffState);
+    vid = stateParams.get('vid');
+  }
+}
+
+// 2. 如果沒有 vid 或找不到對應的里，顯示錯誤與「工程師除錯面板」
 if (!vid || !SYSTEM_CONFIG[vid]) {
-  document.body.innerHTML = '<div style="text-align:center; padding:50px; font-size:20px;">⚠️ 無效的里辦公室連結，請從官方帳號重新進入。</div>';
+  document.body.innerHTML = `
+    <div style="text-align:center; padding:40px 20px; font-size:18px; word-break: break-all; background: white; height: 100vh;">
+      <div style="font-size:50px; margin-bottom:16px;">⚠️</div>
+      <div style="font-size:22px; font-weight:900; color:var(--red); margin-bottom:12px;">無效的連結</div>
+      <div style="color:var(--text2); margin-bottom:30px;">請從官方帳號重新進入</div>
+      
+      <div style="text-align:left; background:#f8fafc; padding:16px; border-radius:12px; font-size:13px; color:#475569; border:1px solid #e2e8f0;">
+        <div style="font-weight:700; color:#1e293b; margin-bottom:8px;">🛠️ 工程師除錯資訊：</div>
+        <div><strong>設定檔載入：</strong> ${typeof SYSTEM_CONFIG !== 'undefined' ? '成功 ✅' : '失敗 ❌ (config.js 未正確讀取)'}</div>
+        <div style="margin-top:6px;"><strong>擷取到的 vid：</strong> <span style="color:var(--red);">${vid === null ? 'null (空值)' : vid}</span></div>
+        <div style="margin-top:6px;"><strong>目前真實網址：</strong><br>${window.location.href}</div>
+      </div>
+    </div>
+  `;
   throw new Error('Invalid Village ID');
 }
 
