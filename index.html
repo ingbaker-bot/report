@@ -575,16 +575,15 @@ const VILLAGE = SYSTEM_CONFIG[vid];
 // 4. 動態替換畫面上的文字 (包含里長姓名)
 document.title = `${VILLAGE.villageName}智慧通報`;
 
-// 找到 Header 右側的文字容器 (原本包著 header-title 和 header-sub 的那個 div)
+// 找到 Header 右側的文字容器
 const headerTextContainer = document.querySelector('.header > div:nth-child(2)');
 
-// 【關鍵新增】讓這個文字容器自動撐滿右側的所有剩餘空間，這樣「左右分散對齊」才會生效
 headerTextContainer.style.flex = "1";
 
-// 動態重寫裡面的 HTML 結構，改為上下兩行的左右對齊排版
+// 【修正重點】在 ${VILLAGE.villageName} 後方加上兩個強制空白 &nbsp;&nbsp;
 headerTextContainer.innerHTML = `
   <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-    <div class="header-title">${VILLAGE.villageName}智慧通報</div>
+    <div class="header-title">${VILLAGE.villageName}&nbsp;&nbsp;智慧通報</div>
     ${VILLAGE.chiefName ? `<div style="font-size: 16px; font-weight: 700; letter-spacing: 0.05em;">👤 ${VILLAGE.chiefName} 里長</div>` : ''}
   </div>
   
