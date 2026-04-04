@@ -235,7 +235,7 @@ const VILLAGE = SYSTEM_CONFIG[vid];
 
 // 動態替換畫面標題
 document.title = `${VILLAGE.villageName}管理後台`;
-document.querySelector('.header-title').textContent = `${VILLAGE.villageName}管理後台`;
+document.querySelector('.header-title').innerHTML = `${VILLAGE.villageName}&nbsp;&nbsp;管理後台`;
 
 // ══════════════════════════════
 // 2. 狀態變數
