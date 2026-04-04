@@ -500,7 +500,12 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
   <div class="success-sub">您的通報已送出<br>里辦公室將儘速處理並回覆您</div>
   <div>通報編號</div>
   <div class="report-id" id="successId">MIY-2026-0001</div>
-  <div class="success-sub" style="font-size:14px;">請截圖保存編號，以便日後查詢進度</div>
+  <div id="successIdNote" style="display:none; font-size:13px; color:var(--jade); margin-top:4px;">
+    ✅ 正確通報編號請查看 Line 訊息
+  </div>
+  <div class="success-sub" style="font-size:14px;">
+    請截圖保存編號，以便日後查詢進度
+  </div>
   <!-- 無 UserID 提示（雙開 Line 或瀏覽器開啟時顯示） -->
   <div id="noUidWarning" style="display:none;margin:16px 0;padding:14px 16px;background:#FEF3C7;border:1.5px solid #FCD34D;border-radius:12px;font-size:13px;color:#92400E;line-height:1.7;">
     ⚠️ <strong>注意：系統無法識別您的 Line 帳號</strong><br>
@@ -1059,19 +1064,18 @@ try {
     console.log('GAS error:', e);
   }
 
-  hideLoading();
-  document.getElementById('successId').textContent = reportId;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-success').classList.add('active');
-  document.querySelector('.step-indicator').style.display = 'none';
+hideLoading();
+// 成功頁說明：流水號由 GAS 產生，里民從 Line 訊息確認正確編號
+document.getElementById('successId').textContent = '請查看 Line 訊息確認通報編號';
+document.getElementById('successIdNote').style.display = 'block';
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+document.getElementById('page-success').classList.add('active');
+document.querySelector('.step-indicator').style.display = 'none';
 
-  // 如果沒有 UserID，顯示警告
-  if (!state.userId || state.userId === 'unknown') {
-    document.getElementById('noUidWarning').style.display = 'block';
-  }
-
-  window.scrollTo(0, 0);
+if (!state.userId || state.userId === 'unknown') {
+  document.getElementById('noUidWarning').style.display = 'block';
 }
+window.scrollTo(0, 0);
 
 function closeLiff() {
   try { liff.closeWindow(); } catch(e) { window.close(); }
