@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里智慧通報v2.5</title>
+<title>民有里智慧通報v2.7</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -1064,18 +1064,19 @@ try {
     console.log('GAS error:', e);
   }
 
-hideLoading();
-// 成功頁說明：流水號由 GAS 產生，里民從 Line 訊息確認正確編號
-document.getElementById('successId').textContent = '請查看 Line 訊息確認通報編號';
-document.getElementById('successIdNote').style.display = 'block';
-document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-document.getElementById('page-success').classList.add('active');
-document.querySelector('.step-indicator').style.display = 'none';
+  hideLoading();
+  // 成功頁說明：流水號由 GAS 產生，里民從 Line 訊息確認正確編號
+  document.getElementById('successId').textContent = '請查看 Line 訊息確認通報編號';
+  document.getElementById('successIdNote').style.display = 'block';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-success').classList.add('active');
+  document.querySelector('.step-indicator').style.display = 'none';
 
-if (!state.userId || state.userId === 'unknown') {
-  document.getElementById('noUidWarning').style.display = 'block';
+  if (!state.userId || state.userId === 'unknown') {
+    document.getElementById('noUidWarning').style.display = 'block';
+  }
+  window.scrollTo(0, 0);
 }
-window.scrollTo(0, 0);
 
 function closeLiff() {
   try { liff.closeWindow(); } catch(e) { window.close(); }
