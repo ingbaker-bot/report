@@ -25,7 +25,7 @@ const SYSTEM_CONFIG = {
     reportPrefix: 'JIA',
     liffIdIndex: '2009667380-LQ3kTHBw', // 請替換為建民里真實 LIFF ID
     liffIdAdmin: '2009667380-qs3zovvv',
-    gasUrl: 'https://script.google.com/macros/s/AKfycbxq_i33h0ztCWMBmvFZMiKiISZjzACDyHAF7crcDSMeY6lU3__5-g99BFLaps4o3hM/exec',
+    gasUrl: 'https://script.google.com/macros/s/AKfycbwHD3_MDhrwFUQdum_fQTZiSJNZknsIMUTzwjtPCP_1Z_GRQpg6Yx3bmw9z1hwA6X4g/exec',
     adminUids: ['U56dab987a29938f8e4a5c07e025bffe5','U111dd208a2fc591089e770f3b960cec9']
   }
 };
