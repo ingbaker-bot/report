@@ -12,7 +12,7 @@ const SYSTEM_CONFIG = {
     reportPrefix: 'MIY',          // 通報編號前綴 (例: MIY-2026-1234)
     liffIdIndex: '2009643244-BgwBKoP8',
     liffIdAdmin: '2009643244-9i0hXQpm',
-    gasUrl: 'https://script.google.com/macros/s/AKfycbzLLT6Kik_VTS6o1n3rnuWGe0quPBah0_Gb3j_Jzi6DtXI9TW6tCGDvorjlqGMF6bnu/exec',
+    gasUrl: 'https://script.google.com/macros/s/AKfycbzYdUAeUxheGXZo-1Y54frfJ90An0xp8Zw8jOCVNpe5upcVJcP-gfD4KV-Sp7IwlXpu/exec',
     adminUids: ['U56dab987a29938f8e4a5c07e025bffe5','Ucc99fd9571fb5fb8b0c8eb608fe57063']
   },
   
