@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里管理後台v2.7</title>
+<title>民有里管理後台v2.8</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -845,6 +845,55 @@ function renderStats(d, label) {
 }
 
 // ── 列印：傳資料到 print.html ──
+// ── 儲存報告到 Google Drive（透過 GAS）──
+async function saveReportToDrive() {
+  const btn = document.getElementById('btnSaveDrive');
+  const msg = document.getElementById('driveResultMsg');
+  if (!lastReportData) return;
+
+  btn.textContent = '⏳ 產生中...';
+  btn.disabled = true;
+  msg.style.display = 'none';
+
+  const year  = document.getElementById('statYear').value;
+  const month = document.getElementById('statMonth').value;
+  const label = month === '0' ? year+'年全年' : year+'年'+String(month).padStart(2,'0')+'月';
+
+  try {
+    const params = new URLSearchParams();
+    params.append('data', JSON.stringify({
+      action:     'saveReport',
+      year:       parseInt(year),
+      month:      parseInt(month),
+      reportData: lastReportData,
+      label:      label
+    }));
+
+    // 因為 no-cors 無法讀回傳值，改用 GET 方式讓 GAS 處理後回傳連結
+    const url = VILLAGE.gasUrl
+      + '?action=saveReport'
+      + '&year=' + year
+      + '&month=' + month
+      + '&label=' + encodeURIComponent(label);
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'ok' && data.fileUrl) {
+      msg.style.cssText = 'display:block;padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-bottom:8px;background:#e8f5ef;color:#1a6b4a;border:1.5px solid #86efac;';
+      msg.innerHTML = '✅ 已儲存！<br><a href="' + data.fileUrl + '" target="_blank" style="color:#1a6b4a;font-weight:700;text-decoration:underline;">點此開啟 Google Drive 檔案</a>';
+      btn.textContent = '✅ 已儲存到 Drive';
+    } else {
+      throw new Error(data.message || '儲存失敗');
+    }
+  } catch(e) {
+    msg.style.cssText = 'display:block;padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-bottom:8px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;';
+    msg.textContent = '⚠️ 儲存失敗：' + e.message;
+    btn.textContent = '☁️ 儲存報告到 Google Drive';
+    btn.disabled = false;
+  }
+}
+
 let lastReportData = null;
 
 function openPrintView() {
@@ -921,12 +970,13 @@ function openPrintView() {
       </ul>
     </div>
 
-    <button onclick="window.print()"
-      style="width:100%;padding:16px;background:#1a6b4a;color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;margin-bottom:8px;cursor:pointer;font-family:inherit;" class="no-print">
-      🖨️ 列印 / 儲存為 PDF
+    <button id="btnSaveDrive" onclick="saveReportToDrive()"
+      style="width:100%;padding:16px;background:#1a6b4a;color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;margin-bottom:8px;cursor:pointer;font-family:inherit;">
+      ☁️ 儲存報告到 Google Drive
     </button>
+    <div id="driveResultMsg" style="display:none;padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-bottom:8px;"></div>
     <button onclick="document.getElementById('printOverlay').remove()"
-      style="width:100%;padding:14px;background:white;color:#1a6b4a;border:2px solid #1a6b4a;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;" class="no-print">
+      style="width:100%;padding:14px;background:white;color:#1a6b4a;border:2px solid #1a6b4a;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;">
       ← 返回後台
     </button>
   `;
