@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通報統計報告</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Noto Sans TC',sans-serif; background:#f2f7f5; color:#0f1f1a; padding:16px; }
+.print-header { text-align:center; padding:20px 0 16px; border-bottom:2px solid #1a6b4a; margin-bottom:16px; }
+.print-header h1 { font-size:20px; color:#1a6b4a; margin-bottom:4px; }
+.print-header p { font-size:13px; color:#5a7068; }
+.stat-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-card { background:white; border-radius:14px; padding:16px; text-align:center; border:1.5px solid #d4e8df; }
+.stat-card-icon { font-size:22px; margin-bottom:4px; }
+.stat-card-val { font-size:26px; font-weight:900; color:#1a6b4a; }
+.stat-card-label { font-size:12px; color:#5a7068; font-weight:600; }
+.stat-card-sub { font-size:11px; color:#94a3b8; margin-top:2px; }
+.chart-block { background:white; border-radius:16px; padding:16px; margin-bottom:14px; border:1.5px solid #d4e8df; page-break-inside:avoid; }
+.chart-title { font-size:15px; font-weight:700; margin-bottom:12px; color:#0f1f1a; }
+.chart-wrap { position:relative; height:220px; }
+.chart-wrap-tall { position:relative; height:260px; }
+.hotspot-list { list-style:none; }
+.hotspot-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #d4e8df; }
+.hotspot-item:last-child { border-bottom:none; }
+.hotspot-rank { width:26px; height:26px; border-radius:50%; background:#e8f5ef; color:#1a6b4a; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hotspot-rank.top1 { background:#1a6b4a; color:white; }
+.hotspot-rank.top2 { background:#2a8a5f; color:white; }
+.hotspot-rank.top3 { background:#3aaa6f; color:white; }
+.hotspot-name { flex:1; font-size:14px; font-weight:600; }
+.hotspot-bar-wrap { width:80px; height:8px; background:#e8f5ef; border-radius:4px; overflow:hidden; }
+.hotspot-bar { height:100%; background:#1a6b4a; border-radius:4px; }
+.hotspot-count { font-size:13px; font-weight:700; color:#1a6b4a; min-width:30px; text-align:right; }
+.btn-print-now {
+  display:block; width:100%; padding:16px; background:#1a6b4a; color:white;
+  border:none; border-radius:14px; font-size:16px; font-weight:700;
+  cursor:pointer; margin-bottom:20px; font-family:inherit;
+}
+.no-data { text-align:center; padding:60px 20px; color:#5a7068; }
+@media print {
+  .btn-print-now { display:none !important; }
+  body { background:white; padding:8px; }
+  .chart-block, .stat-card { page-break-inside:avoid; }
+}
+</style>
+</head>
+<body>
+
+<div id="content">
+  <div class="no-data">⏳ 載入中...</div>
+</div>
+
+<script>
+const COLORS = ['#1a6b4a','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#06b6d4','#10b981','#f97316','#6366f1','#ec4899'];
+
+function renderPage(d, label, villageName) {
+  const prevDiff = d.prevTotal > 0
+    ? (d.total > d.prevTotal ? '▲ ' : '▼ ') + Math.abs(d.total - d.prevTotal) + ' 較上月'
+    : '';
+
+  document.getElementById('content').innerHTML = `
+    <div class="print-header">
+      <h1>📊 ${villageName} 里政通報統計報告</h1>
+      <p>統計期間：${label}</p>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-card-icon">📋</div>
+        <div class="stat-card-val">${d.total}</div>
+        <div class="stat-card-label">總通報數</div>
+        <div class="stat-card-sub">${prevDiff}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-val">${d.closeRate}%</div>
+        <div class="stat-card-label">結案率</div>
+        <div class="stat-card-sub">已完成 ${d.doneCount} 筆</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon">⏱️</div>
+        <div class="stat-card-val">${d.avgDays || '—'}</div>
+        <div class="stat-card-label">平均處理天數</div>
+        <div class="stat-card-sub">${d.doneCount > 0 ? '已完成案件' : '尚無完成案件'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon">⏳</div>
+        <div class="stat-card-val">${d.pendingCount}</div>
+        <div class="stat-card-label">待處理數</div>
+        <div class="stat-card-sub">處理中 ${d.processCount} 筆</div>
+      </div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">🥧 通報類別分佈</div>
+      <div class="chart-wrap"><canvas id="chartPie"></canvas></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">📊 子項目排行（前10）</div>
+      <div class="chart-wrap-tall"><canvas id="chartBar"></canvas></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">${d.month === 0 ? '📈 每月通報趨勢' : '📈 每日通報趨勢'}</div>
+      <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
+    </div>
+
+    <div class="chart-block">
+      <div class="chart-title">🗺️ 通報熱區（前5）</div>
+      <ul class="hotspot-list">
+        ${d.hotspots.map((h,i) => `
+          <li class="hotspot-item">
+            <div class="hotspot-rank ${i===0?'top1':i===1?'top2':i===2?'top3':''}">${i+1}</div>
+            <div class="hotspot-name">${h.name}</div>
+            <div class="hotspot-bar-wrap">
+              <div class="hotspot-bar" style="width:${Math.round(h.count/d.hotspots[0].count*100)}%"></div>
+            </div>
+            <div class="hotspot-count">${h.count}筆</div>
+          </li>`).join('')}
+      </ul>
+    </div>
+
+    <button class="btn-print-now" onclick="window.print()">🖨️ 列印 / 儲存為 PDF</button>
+  `;
+
+  // 圓餅圖
+  new Chart(document.getElementById('chartPie'), {
+    type:'doughnut',
+    data:{ labels:d.catData.map(c=>c.name+' ('+c.pct+'%)'), datasets:[{ data:d.catData.map(c=>c.count), backgroundColor:COLORS.slice(0,d.catData.length), borderWidth:2, borderColor:'#fff' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:13}, padding:12 } } } }
+  });
+
+  // 橫條圖
+  new Chart(document.getElementById('chartBar'), {
+    type:'bar',
+    data:{ labels:d.subcatData.map(s=>s.name), datasets:[{ data:d.subcatData.map(s=>s.count), backgroundColor:d.subcatData.map((_,i)=>COLORS[i%COLORS.length]), borderRadius:6, borderSkipped:false }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'#f0f0f0'},ticks:{font:{size:12}}}, y:{ticks:{font:{size:12}}} } }
+  });
+
+  // 趨勢折線圖
+  const trendData = d.month === 0 ? d.monthlyTrend : d.dailyTrend;
+  new Chart(document.getElementById('chartTrend'), {
+    type:'line',
+    data:{ labels:trendData.map(t=>t.month||t.day), datasets:[{ data:trendData.map(t=>t.count), borderColor:'#1a6b4a', backgroundColor:'rgba(26,107,74,0.1)', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#1a6b4a', fill:true, tension:0.3 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,grid:{color:'#f0f0f0'},ticks:{font:{size:12},stepSize:1}} } }
+  });
+}
+
+// ── 取得資料：優先從 sessionStorage，備用從 URL 參數 ──
+window.addEventListener('DOMContentLoaded', function() {
+  try {
+    const stored = sessionStorage.getItem('printReportData');
+    const label  = sessionStorage.getItem('printReportLabel') || '統計報告';
+    const vname  = sessionStorage.getItem('printReportVillage') || '里政';
+    if (stored) {
+      const d = JSON.parse(stored);
+      renderPage(d, label, vname);
+      return;
+    }
+  } catch(e) {}
+
+  document.getElementById('content').innerHTML =
+    '<div class="no-data">⚠️ 找不到報告資料<br>請回管理後台重新產生</div>';
+});
+</script>
+</body>
+</html>
