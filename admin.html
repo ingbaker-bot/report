@@ -240,43 +240,52 @@ textarea:focus { border-color: var(--jade); }
 }
 </style>
 
-<!-- ══ PWA 設定（里務版）══ -->
+<!-- ══ PWA 設定 v2.9 ══ -->
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1a6b4a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="里政通報">
+<meta name="apple-mobile-web-app-title" content="里政管理">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <script>
+// ── Service Worker 註冊（PWA 離線支援）──
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('[PWA] 已就緒'))
-      .catch(e => console.log('[PWA] 失敗', e));
+      .then(() => console.log('[PWA] Service Worker 已就緒'))
+      .catch(e => console.log('[PWA] Service Worker 失敗：', e));
   });
 }
-// Android 安裝提示
-let _pwaPrompt;
+// ── Android：顯示「安裝到主畫面」提示條 ──
+let _pwaPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _pwaPrompt = e;
   setTimeout(_showPWABanner, 3000);
 });
 function _showPWABanner() {
-  if (!_pwaPrompt || localStorage.getItem('pwa-ok')) return;
-  const b = document.createElement('div');
-  b.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1a6b4a;color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:9999;display:flex;align-items:center;gap:10px;font-family:Noto Sans TC,sans-serif;white-space:nowrap;cursor:pointer;';
-  b.innerHTML = '📲 安裝到主畫面，使用更方便 &nbsp;<span style="opacity:.6">✕</span>';
-  b.onclick = async (e) => {
-    if (e.target.tagName === 'SPAN') { b.remove(); return; }
-    b.remove();
+  if (!_pwaPrompt || localStorage.getItem('pwa-installed-admin')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.style.cssText = [
+    'position:fixed', 'bottom:70px', 'left:50%', 'transform:translateX(-50%)',
+    'background:#1a6b4a', 'color:#ffffff', 'padding:12px 20px',
+    'border-radius:24px', 'font-size:14px', 'font-weight:700',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.25)', 'z-index:9999',
+    'display:flex', 'align-items:center', 'gap:10px',
+    'font-family:Noto Sans TC,sans-serif', 'white-space:nowrap', 'cursor:pointer'
+  ].join(';');
+  banner.innerHTML = '📲 安裝到主畫面，管理更方便 &nbsp;<span style="opacity:0.6;font-size:13px;">✕</span>';
+  banner.addEventListener('click', async (e) => {
+    if (e.target.tagName === 'SPAN') { banner.remove(); return; }
+    banner.remove();
     _pwaPrompt.prompt();
     const { outcome } = await _pwaPrompt.userChoice;
-    if (outcome === 'accepted') localStorage.setItem('pwa-ok','1');
+    if (outcome === 'accepted') localStorage.setItem('pwa-installed-admin', '1');
     _pwaPrompt = null;
-  };
-  document.body.appendChild(b);
+  });
+  document.body.appendChild(banner);
 }
 </script>
 </head>
@@ -885,6 +894,55 @@ function renderStats(d, label) {
 }
 
 // ── 列印：傳資料到 print.html ──
+// ── 儲存報告到 Google Drive（透過 GAS）──
+async function saveReportToDrive() {
+  const btn = document.getElementById('btnSaveDrive');
+  const msg = document.getElementById('driveResultMsg');
+  if (!lastReportData) return;
+
+  btn.textContent = '⏳ 產生中...';
+  btn.disabled = true;
+  msg.style.display = 'none';
+
+  const year  = document.getElementById('statYear').value;
+  const month = document.getElementById('statMonth').value;
+  const label = month === '0' ? year+'年全年' : year+'年'+String(month).padStart(2,'0')+'月';
+
+  try {
+    const params = new URLSearchParams();
+    params.append('data', JSON.stringify({
+      action:     'saveReport',
+      year:       parseInt(year),
+      month:      parseInt(month),
+      reportData: lastReportData,
+      label:      label
+    }));
+
+    // 因為 no-cors 無法讀回傳值，改用 GET 方式讓 GAS 處理後回傳連結
+    const url = VILLAGE.gasUrl
+      + '?action=saveReport'
+      + '&year=' + year
+      + '&month=' + month
+      + '&label=' + encodeURIComponent(label);
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === 'ok' && data.fileUrl) {
+      msg.style.cssText = 'display:block;padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-bottom:8px;background:#e8f5ef;color:#1a6b4a;border:1.5px solid #86efac;';
+      msg.innerHTML = '✅ 已儲存！<br><a href="' + data.fileUrl + '" target="_blank" style="color:#1a6b4a;font-weight:700;text-decoration:underline;">點此開啟 Google Drive 檔案</a>';
+      btn.textContent = '✅ 已儲存到 Drive';
+    } else {
+      throw new Error(data.message || '儲存失敗');
+    }
+  } catch(e) {
+    msg.style.cssText = 'display:block;padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-bottom:8px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;';
+    msg.textContent = '⚠️ 儲存失敗：' + e.message;
+    btn.textContent = '☁️ 儲存報告到 Google Drive';
+    btn.disabled = false;
+  }
+}
+
 let lastReportData = null;
 
 function openPrintView() {
@@ -961,12 +1019,13 @@ function openPrintView() {
       </ul>
     </div>
 
-    <button onclick="window.print()"
-      style="width:100%;padding:16px;background:#1a6b4a;color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;margin-bottom:8px;cursor:pointer;font-family:inherit;" class="no-print">
-      🖨️ 列印 / 儲存為 PDF
+    <button id="btnSaveDrive" onclick="saveReportToDrive()"
+      style="width:100%;padding:16px;background:#1a6b4a;color:white;border:none;border-radius:14px;font-size:16px;font-weight:700;margin-bottom:8px;cursor:pointer;font-family:inherit;">
+      ☁️ 儲存報告到 Google Drive
     </button>
+    <div id="driveResultMsg" style="display:none;padding:12px;border-radius:10px;text-align:center;font-size:14px;margin-bottom:8px;"></div>
     <button onclick="document.getElementById('printOverlay').remove()"
-      style="width:100%;padding:14px;background:white;color:#1a6b4a;border:2px solid #1a6b4a;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;" class="no-print">
+      style="width:100%;padding:14px;background:white;color:#1a6b4a;border:2px solid #1a6b4a;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px;">
       ← 返回後台
     </button>
   `;
