@@ -1,0 +1,26 @@
+{
+  "name": "里政管理後台",
+  "short_name": "里政管理",
+  "description": "里長專用管理後台，處理里民通報",
+  "start_url": "./admin.html?vid=minyou",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1a6b4a",
+  "background_color": "#f2f7f5",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "./icons/icon-admin-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-admin-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
