@@ -2,7 +2,7 @@
   "name": "里政智慧通報",
   "short_name": "里政通報",
   "description": "里民智慧通報系統，快速反映里務問題",
-  "start_url": "./index.html",
+  "start_url": "./index.html?vid=minyou",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
