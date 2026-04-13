@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里智慧通報v2.8</title>
+<title>民有里智慧通報v2.9</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -305,15 +305,13 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 <meta name="apple-mobile-web-app-title" content="里政通報">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <script>
-// ── Service Worker 註冊（PWA 離線支援）──
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('[PWA] Service Worker 已就緒'))
-      .catch(e => console.log('[PWA] Service Worker 失敗：', e));
+      .catch(e => console.log('[PWA] 失敗：', e));
   });
 }
-// ── Android：顯示「安裝到主畫面」提示條 ──
 let _pwaPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
@@ -322,26 +320,18 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 function _showPWABanner() {
   if (!_pwaPrompt || localStorage.getItem('pwa-installed-index')) return;
-  const banner = document.createElement('div');
-  banner.id = 'pwa-install-banner';
-  banner.style.cssText = [
-    'position:fixed', 'bottom:70px', 'left:50%', 'transform:translateX(-50%)',
-    'background:#1a6b4a', 'color:#ffffff', 'padding:12px 20px',
-    'border-radius:24px', 'font-size:14px', 'font-weight:700',
-    'box-shadow:0 4px 20px rgba(0,0,0,0.25)', 'z-index:9999',
-    'display:flex', 'align-items:center', 'gap:10px',
-    'font-family:Noto Sans TC,sans-serif', 'white-space:nowrap', 'cursor:pointer'
-  ].join(';');
-  banner.innerHTML = '📲 安裝到主畫面，通報更方便 &nbsp;<span style="opacity:0.6;font-size:13px;">✕</span>';
-  banner.addEventListener('click', async (e) => {
-    if (e.target.tagName === 'SPAN') { banner.remove(); return; }
-    banner.remove();
+  const b = document.createElement('div');
+  b.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1a6b4a;color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,0.25);z-index:9999;display:flex;align-items:center;gap:10px;font-family:Noto Sans TC,sans-serif;white-space:nowrap;cursor:pointer;';
+  b.innerHTML = '📲 安裝到主畫面，通報更方便 &nbsp;<span style="opacity:0.6;font-size:13px;">✕</span>';
+  b.addEventListener('click', async (e) => {
+    if (e.target.tagName === 'SPAN') { b.remove(); return; }
+    b.remove();
     _pwaPrompt.prompt();
     const { outcome } = await _pwaPrompt.userChoice;
     if (outcome === 'accepted') localStorage.setItem('pwa-installed-index', '1');
     _pwaPrompt = null;
   });
-  document.body.appendChild(banner);
+  document.body.appendChild(b);
 }
 </script>
 </head>
@@ -590,18 +580,48 @@ function _showPWABanner() {
 <script>
 // 動態設定載入區
 // ══════════════════════════════
-// 1. 從網址取得參數 (處理 LINE LIFF 的特殊 liff.state 封裝問題) (例如 ?vid=minyou)
+// 1. 從網址取得 vid（處理 LIFF 多種封裝格式）
 const urlParams = new URLSearchParams(window.location.search);
 let vid = urlParams.get('vid');
 
-// 【新增】如果最外層抓不到 vid，嘗試從 LINE 專屬的 liff.state 中解析包裹
+// 方法二：從 liff.state 解析（LIFF 標準封裝）
 if (!vid) {
   const liffState = urlParams.get('liff.state');
   if (liffState) {
-    // 解析 liff.state 裡面的字串 (例如 "?vid=minyou")
     const stateParams = new URLSearchParams(liffState.startsWith('?') ? liffState : '?' + liffState);
     vid = stateParams.get('vid');
   }
+}
+
+// 方法三：從 liffRedirectUri 解析（LIFF OAuth callback 格式）
+// 當 LIFF 完成登入後，網址變成 ?state=xxx&liffClientId=xxx&liffRedirectUri=...&code=xxx
+if (!vid) {
+  const redirectUri = urlParams.get('liffRedirectUri');
+  if (redirectUri) {
+    try {
+      const decoded = decodeURIComponent(redirectUri);
+      const redirectParams = new URLSearchParams(decoded.includes('?') ? decoded.split('?')[1] : decoded);
+      vid = redirectParams.get('vid');
+    } catch(e) {}
+  }
+}
+
+// 方法四：從 hash 解析（部分 LIFF 版本用 # 傳遞）
+if (!vid && window.location.hash) {
+  try {
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+    vid = hashParams.get('vid');
+  } catch(e) {}
+}
+
+// 方法五：從 sessionStorage 取回（LIFF 跳轉前先存好）
+if (!vid) {
+  vid = sessionStorage.getItem('last_vid');
+}
+
+// 成功取得 vid 後存到 sessionStorage，方便 LIFF 跳轉後還能找回來
+if (vid && window.SYSTEM_CONFIG && window.SYSTEM_CONFIG[vid]) {
+  sessionStorage.setItem('last_vid', vid);
 }
 
 // 2. 如果沒有 vid 或找不到對應的里，顯示錯誤與「工程師除錯面板」
