@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>民有里智慧通報v2.7</title>
+<title>民有里智慧通報v2.8</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -295,6 +295,55 @@ textarea { resize: none; height: 100px; line-height: 1.6; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 16px; font-weight: 600; color: var(--jade); }
 </style>
+
+<!-- ══ PWA 設定 v2.8 ══ -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1a6b4a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="里政通報">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<script>
+// ── Service Worker 註冊（PWA 離線支援）──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('[PWA] Service Worker 已就緒'))
+      .catch(e => console.log('[PWA] Service Worker 失敗：', e));
+  });
+}
+// ── Android：顯示「安裝到主畫面」提示條 ──
+let _pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  setTimeout(_showPWABanner, 3000);
+});
+function _showPWABanner() {
+  if (!_pwaPrompt || localStorage.getItem('pwa-installed-index')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.style.cssText = [
+    'position:fixed', 'bottom:70px', 'left:50%', 'transform:translateX(-50%)',
+    'background:#1a6b4a', 'color:#ffffff', 'padding:12px 20px',
+    'border-radius:24px', 'font-size:14px', 'font-weight:700',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.25)', 'z-index:9999',
+    'display:flex', 'align-items:center', 'gap:10px',
+    'font-family:Noto Sans TC,sans-serif', 'white-space:nowrap', 'cursor:pointer'
+  ].join(';');
+  banner.innerHTML = '📲 安裝到主畫面，通報更方便 &nbsp;<span style="opacity:0.6;font-size:13px;">✕</span>';
+  banner.addEventListener('click', async (e) => {
+    if (e.target.tagName === 'SPAN') { banner.remove(); return; }
+    banner.remove();
+    _pwaPrompt.prompt();
+    const { outcome } = await _pwaPrompt.userChoice;
+    if (outcome === 'accepted') localStorage.setItem('pwa-installed-index', '1');
+    _pwaPrompt = null;
+  });
+  document.body.appendChild(banner);
+}
+</script>
 </head>
 <body>
 
