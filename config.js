@@ -13,7 +13,7 @@ const SYSTEM_CONFIG = {
     liffIdIndex: '2009643244-BgwBKoP8',
     liffIdAdmin: '2009643244-9i0hXQpm',
     gasUrl: 'https://script.google.com/macros/s/AKfycbzYdUAeUxheGXZo-1Y54frfJ90An0xp8Zw8jOCVNpe5upcVJcP-gfD4KV-Sp7IwlXpu/exec',
-    adminUids: ['U56dab987a29938f8e4a5c07e025bffe5','Ucc99fd9571fb5fb8b0c8eb608fe57063','Ue2ee7b42e30438975bc810b694c8bade']
+    adminUids: ['U56dab987a29938f8e4a5c07e025bffe5','Ucc99fd9571fb5fb8b0c8eb608fe57063','Ue2ee7b42e30438975bc810b694c8bade','U7313699b76d8463649ba6b5f24793e5a']
   },
   
   // ── 建民里設定 ──
